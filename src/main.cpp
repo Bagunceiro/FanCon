@@ -6,7 +6,7 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
-const char* version = "FanCon 1.0.0";
+const char* version = "FanCon 1.0.1";
 const char* compDate = __DATE__;
 const char* compTime = __TIME__;
 
