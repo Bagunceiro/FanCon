@@ -1,5 +1,6 @@
 #include "config.h"
 #include <ESP8266WiFi.h>
+#include <ArduinoJson.h>
 
 const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
@@ -86,6 +87,24 @@ bool configBlock::write(uint32_t magic)
   EEPROM.put(0, *this);
   EEPROM.commit();
   EEPROM.end();
+  return true;
+}
+
+bool configBlock::writeFile()
+{
+  StaticJsonDocument<512> doc;
+
+  doc["wifissid"] = wifissid;
+  doc["wifipsk"] = wifipsk;
+  doc["controllername"] = controllername;
+  doc["mqtthost"] = mqtthost;
+  doc["mqttport"] = mqttport;
+  doc["mqttuser"] = mqttuser;
+  doc["mqttpwd"] = mqttpwd;
+  doc["mqttroot"] = mqttroot;
+  doc["mqtttopic"] = mqtttopic;
+  serializeJsonPretty(doc, Serial);
+
   return true;
 }
 
