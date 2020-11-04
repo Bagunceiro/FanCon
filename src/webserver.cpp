@@ -8,13 +8,13 @@ const char* updateStatusMessage = "";
 
 void handlePost() {
 
-  struct configBlock params = persistant;
+  // struct configBlock params = persistant;
 
   for (uint8_t i = 0; i < server.args(); i++) {
     const String argName = server.argName(i);
     if (argName == "ctlrname")
     {
-      snprintf(params.controllername, sizeof(params.controllername), server.arg(i).c_str());
+      snprintf(persistant.controllername, sizeof(persistant.controllername), server.arg(i).c_str());
     }
     else if (argName == "wifissid")
     {
@@ -28,32 +28,33 @@ void handlePost() {
     }
     else if (argName == "mqtthost")
     {
-      snprintf(params.mqtthost, sizeof(params.mqtthost), server.arg(i).c_str());
+      snprintf(persistant.mqtthost, sizeof(persistant.mqtthost), server.arg(i).c_str());
     }
     else if (argName == "mqttport")
     {
-      snprintf(params.mqttport, sizeof(params.mqttport), server.arg(i).c_str());
+      snprintf(persistant.mqttport, sizeof(persistant.mqttport), server.arg(i).c_str());
     }
     else if (argName == "mqttuser")
     {
-      snprintf(params.mqttuser, sizeof(params.mqttuser), server.arg(i).c_str());
+      snprintf(persistant.mqttuser, sizeof(persistant.mqttuser), server.arg(i).c_str());
     }
     else if (argName == "mqttpwd")
     {
-      snprintf(params.mqttpwd, sizeof(params.mqttpwd), server.arg(i).c_str());
+      snprintf(persistant.mqttpwd, sizeof(persistant.mqttpwd), server.arg(i).c_str());
     }
     else if (argName == "mqttroot")
     {
-      snprintf(params.mqttroot, sizeof(params.mqttroot), server.arg(i).c_str());
+      snprintf(persistant.mqttroot, sizeof(persistant.mqttroot), server.arg(i).c_str());
     }
     else if (argName == "mqtttopic")
     {
-      snprintf(params.mqtttopic, sizeof(params.mqtttopic), server.arg(i).c_str());
+      snprintf(persistant.mqtttopic, sizeof(persistant.mqtttopic), server.arg(i).c_str());
     }
   }
-  persistant = params;
-  persistant.magicnumber = MAGIC;
-  persistant.write();
+  // persistant = params;
+  // persistant.magicnumber = MAGIC;
+  persistant.dump();
+  persistant.writeFile();
 }
 
 void handleRoot() {
@@ -65,6 +66,8 @@ void handleRoot() {
     handlePost();
     updated = "<P>Update success - Resetting</P>";
     resetting = true;
+    Serial.println("Resetting");
+    delay(1000);
   }
 
   char buffer[64];

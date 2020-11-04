@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #include <Arduino.h>
-#include <EEPROM.h>
+// #include <EEPROM.h>
 
 extern const char* SSID;
 extern const char* PSK;
@@ -31,11 +31,11 @@ extern const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE;
 
 extern const int IRDEBOUNCE; // Number of milliseconds to leave fallow between IR messages
 
-#define MAGIC 0xc0ffee
+// #define MAGIC 0xc0ffee
 
 struct configBlock
 {
-  uint32_t magicnumber;
+  // uint32_t magicnumber;
   char wifissid[16];
   char wifipsk[16];
   char controllername[16];
@@ -47,11 +47,11 @@ struct configBlock
   char mqtttopic[16];
 
   void dump();
-  bool read();
+  // bool read();
   bool writeFile();
   bool readFile();
-  bool write(uint32_t magic = MAGIC);
-  bool valid();
+  // bool write(uint32_t magic = MAGIC);
+  // bool valid();
 };
 
 extern configBlock persistant;

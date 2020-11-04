@@ -50,7 +50,7 @@ void report()
 
 void configBlock::dump()
 {
-  Serial.print("magicnumber: "); Serial.println(magicnumber, HEX);
+  // Serial.print("magicnumber: "); Serial.println(magicnumber, HEX);
   Serial.print("wifissid: "); Serial.println(wifissid);
   Serial.print("wifipsk: "); Serial.println(wifipsk);
   Serial.print("controllername: "); Serial.println(controllername);
@@ -62,6 +62,7 @@ void configBlock::dump()
   Serial.print("mqtttopic: "); Serial.println(mqtttopic);
 }
 
+/*
 bool configBlock::read()
 {
   EEPROM.begin(sizeof(*this));
@@ -81,7 +82,9 @@ bool configBlock::read()
   strcpy(wifipsk,  PSK);
   return true;
 }
+*/
 
+/*
 bool configBlock::write(uint32_t magic)
 {
   EEPROM.begin(sizeof(*this));
@@ -90,17 +93,23 @@ bool configBlock::write(uint32_t magic)
   EEPROM.end();
   return true;
 }
+*/
 
 bool configBlock::writeFile()
 {
   StaticJsonDocument<512> doc;
+
+Serial.println("writeFile");
+
   LittleFS.begin();
+
   File configFile = LittleFS.open("/config.json", "w");
   if (!configFile) {
     perror("");
     Serial.println("Config file open for write failed");
   }
   else {
+    Serial.println("Building doc");
  
   doc["wifissid"] = wifissid;
   doc["wifipsk"] = wifipsk;
@@ -111,28 +120,36 @@ bool configBlock::writeFile()
   doc["mqttpwd"] = mqttpwd;
   doc["mqttroot"] = mqttroot;
   doc["mqtttopic"] = mqtttopic;
+  Serial.println("writing file");
   serializeJson(doc, configFile);
   }
   configFile.close();
   LittleFS.end();
+  Serial.println("done");
   return true;
 }
 
 bool configBlock::readFile()
 {
   StaticJsonDocument<512> doc;
+  bool result = false;
+
   LittleFS.begin();
   File configFile = LittleFS.open("/config.json", "r");
   if (!configFile) {
-    Serial.println("Config file open for write failed");
+    Serial.println("Config file open for read failed");
   }
-  else {
-  // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc, configFile);
-    if (error)
-      Serial.println(F("Failed to read file, using default configuration"));
+  DeserializationError error = deserializeJson(doc, configFile);
+  if (error)
+  {
+      Serial.println(F("Failed to read file; using default configuration"));
+  }
+  else
+  {
+      result = true;
+  }
+  // Serial.println("Read Config -");
 
-  // Copy values from the JsonDocument to the Config
   strlcpy(wifissid,       doc["wifissid"] | "asgard_2g",    sizeof(wifissid));
   strlcpy(wifipsk,        doc["wifipsk"]  | "enaLkraP",     sizeof(wifipsk));
   strlcpy(controllername, doc["controllername"] | "FanCon", sizeof(controllername));
@@ -142,15 +159,17 @@ bool configBlock::readFile()
   strlcpy(mqttpwd,        doc["mqttpwd"]  | "",             sizeof(mqttpwd));
   strlcpy(mqttroot,       doc["mqttroot"] | "",             sizeof(mqttroot));
   strlcpy(mqtttopic,      doc["mqtttopic"] | "",            sizeof(mqtttopic));
-
   // Close the file (Curiously, File's destructor doesn't close the file)
+  
   configFile.close();
-  }
+
   LittleFS.end();
-  return true;
+  return result;
 }
 
+/*
 bool configBlock::valid()
 {
   return (magicnumber == MAGIC);
 }
+*/

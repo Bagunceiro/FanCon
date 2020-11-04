@@ -83,10 +83,18 @@ void timedLoop(void *pArg) {
 
 void setup() {
   Serial.begin(9600);
+  delay(2000);
 
-  persistant.read();
+  // persistant.read();
+  // persistant.dump();
+  // persistant.writeFile();
+  if (persistant.readFile() == false)
+  {
+    persistant.writeFile();
+
+  }
   persistant.dump();
-  persistant.writeFile();
+
   Serial.println(version);
 
   String ctlr = persistant.controllername;
