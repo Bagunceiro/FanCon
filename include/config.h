@@ -49,6 +49,7 @@ struct configBlock
   void dump();
   bool read();
   bool writeFile();
+  bool readFile();
   bool write(uint32_t magic = MAGIC);
   bool valid();
 };

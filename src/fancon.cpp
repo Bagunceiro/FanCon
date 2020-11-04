@@ -86,6 +86,7 @@ void setup() {
 
   persistant.read();
   persistant.dump();
+  persistant.writeFile();
   Serial.println(version);
 
   String ctlr = persistant.controllername;

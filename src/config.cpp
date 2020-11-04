@@ -1,6 +1,7 @@
 #include "config.h"
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
+#include <LittleFS.h>
 
 const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
@@ -93,7 +94,14 @@ bool configBlock::write(uint32_t magic)
 bool configBlock::writeFile()
 {
   StaticJsonDocument<512> doc;
-
+  LittleFS.begin();
+  File configFile = LittleFS.open("/config.json", "w");
+  if (!configFile) {
+    perror("");
+    Serial.println("Config file open for write failed");
+  }
+  else {
+ 
   doc["wifissid"] = wifissid;
   doc["wifipsk"] = wifipsk;
   doc["controllername"] = controllername;
@@ -103,8 +111,32 @@ bool configBlock::writeFile()
   doc["mqttpwd"] = mqttpwd;
   doc["mqttroot"] = mqttroot;
   doc["mqtttopic"] = mqtttopic;
-  serializeJsonPretty(doc, Serial);
+  serializeJson(doc, configFile);
+  }
+  LittleFS.end();
+  return true;
+}
 
+bool configBlock::readFile()
+{
+  StaticJsonDocument<512> doc;
+  LittleFS.begin();
+  File configFile = LittleFS.open("/config.json", "r");
+  if (!configFile) {
+    Serial.println("Config file open for write failed");
+  }
+  else {
+  doc["wifissid"] = wifissid;
+  doc["wifipsk"] = wifipsk;
+  doc["controllername"] = controllername;
+  doc["mqtthost"] = mqtthost;
+  doc["mqttport"] = mqttport;
+  doc["mqttuser"] = mqttuser;
+  doc["mqttpwd"] = mqttpwd;
+  doc["mqttroot"] = mqttroot;
+  doc["mqtttopic"] = mqtttopic;
+  }
+  LittleFS.end();
   return true;
 }
 
