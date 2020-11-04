@@ -29,6 +29,8 @@ bool OTAinit = false;
 
 void initOTA()
 {
+  Serial.println("initOTA");
+  Serial.printf("Hostname to %s\n", persistant.controllername);
   ArduinoOTA.setHostname(persistant.controllername);
   ArduinoOTA.onStart([]() { // Enter safe state for the upgrade
     lamp.sw(0);
@@ -83,7 +85,8 @@ void timedLoop(void *pArg) {
 
 void setup() {
   Serial.begin(9600);
-  delay(2000);
+  Serial.println("");
+  Serial.println("Fancon Starting");
 
   // persistant.read();
   // persistant.dump();
