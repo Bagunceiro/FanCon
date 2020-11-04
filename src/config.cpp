@@ -113,6 +113,7 @@ bool configBlock::writeFile()
   doc["mqtttopic"] = mqtttopic;
   serializeJson(doc, configFile);
   }
+  configFile.close();
   LittleFS.end();
   return true;
 }
@@ -126,15 +127,24 @@ bool configBlock::readFile()
     Serial.println("Config file open for write failed");
   }
   else {
-  doc["wifissid"] = wifissid;
-  doc["wifipsk"] = wifipsk;
-  doc["controllername"] = controllername;
-  doc["mqtthost"] = mqtthost;
-  doc["mqttport"] = mqttport;
-  doc["mqttuser"] = mqttuser;
-  doc["mqttpwd"] = mqttpwd;
-  doc["mqttroot"] = mqttroot;
-  doc["mqtttopic"] = mqtttopic;
+  // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, configFile);
+    if (error)
+      Serial.println(F("Failed to read file, using default configuration"));
+
+  // Copy values from the JsonDocument to the Config
+  strlcpy(wifissid,       doc["wifissid"] | "asgard_2g",    sizeof(wifissid));
+  strlcpy(wifipsk,        doc["wifipsk"]  | "enaLkraP",     sizeof(wifipsk));
+  strlcpy(controllername, doc["controllername"] | "FanCon", sizeof(controllername));
+  strlcpy(mqtthost,       doc["mqtthost"] | "",             sizeof(mqtthost));
+  strlcpy(mqttport,       doc["mqttport"] | "",             sizeof(mqttport));
+  strlcpy(mqttuser,       doc["mqttuser"] | "",             sizeof(mqttuser));
+  strlcpy(mqttpwd,        doc["mqttpwd"]  | "",             sizeof(mqttpwd));
+  strlcpy(mqttroot,       doc["mqttroot"] | "",             sizeof(mqttroot));
+  strlcpy(mqtttopic,      doc["mqtttopic"] | "",            sizeof(mqtttopic));
+
+  // Close the file (Curiously, File's destructor doesn't close the file)
+  configFile.close();
   }
   LittleFS.end();
   return true;
