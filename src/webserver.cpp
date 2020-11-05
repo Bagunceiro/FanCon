@@ -12,21 +12,29 @@ void handleRoot()
 
   snprintf(temp, maxPageSize,
            "<HEAD><title>Controller</title><style>\
-.l {background-color:lightblue; font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-input {background-color:#cccccc; font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-table, th, td { border: 1px solid black; }\
+body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
+table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
+th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
+button {font-size: 4vw}\
+tr:nth-child(even) { background-color: #dddddd;}\
 </style>\
-</HEAD><BODY class=l>\
-<H1>Controller Configuration</H1>\
-Version: %s (%s %s)<br>\
-MAC Address: %s<br>\
-Uptime: %s<br>\
-WiFi SSID: %s<br>\
+<script>function goconf() {location.assign('config');}</script>\
+</HEAD><BODY>\
+<H1>Controller %s</H1>\
+<TABLE>\
+<TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>\
+<TR><TD>MAC Address</TD><TD>%s</TD></TR>\
+<TR><TD>Uptime</TD><TD>%s</TD></TR>\
+<TR><TD>WiFi SSID</TD><TD>%s</TD></TR>\
+</TABLE><BR>\
+<button type=button onclick=goconf()>Configure</button>\
 </BODY>",
+           persistant.controllername,
            version, compTime, compDate,
            WiFi.macAddress().c_str(),
            upTime(buffer),
-           WiFi.SSID().c_str());
+           WiFi.SSID().c_str()
+           );
   server.send(200, "text/html", temp);
 }
 
@@ -96,34 +104,28 @@ void handleConfig()
 
   snprintf(temp, maxPageSize,
            "<HEAD><title>Controller Configuration</title><style>\
-.l {background-color:lightblue; font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-input {background-color:#cccccc; font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-table, th, td { border: 1px solid black; }\
+body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
+input {font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
+table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
+th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
+tr:nth-child(even) { background-color: #dddddd;}\
 </style>\
-</HEAD><BODY class=l>\
+</HEAD><BODY>\
 <H1>Controller Configuration</H1>\
 <FORM method=post action=/config.update>\
-<center><table class=l>\
-<tr><td><label for=ctlrname>Controller:</label></td><td><input type=text id=ctlrname name=ctlrname value=%s></td></tr>\
-<tr><th colspan=2>WiFi</th></tr>\
-<tr><td><label for=wifissid>SSID:</label></td><td><input type=text id=wifissid name=wifissid value=\"%s\"></td></tr>\
-<tr><td><label for=wifipsk>PSK:</label></td><td><input type=text id=wifipsk name=wifipsk value=\"%s\"></td></tr>\
-<tr><th colspan=2>MQTT</th></tr>\
-<tr><td><label for=mqtthost>Broker:</label></td><td><input type=text id=mqtthost name=mqtthost value=%s></td></tr>\
-<tr><td><label for=mqttport>Port:</label></td><td><input type=text id=mqttport name=mqttport value=%s></td></tr>\
-<tr><td><label for=mqttuser>User:</label></td><td><input type=text id=mqttuser name=mqttuser value=%s></td></tr>\
-<tr><td><label for=mqttuser>Password:</label></td><td><input type=text id=mqttpwd name=mqttpwd value=%s></td></tr>\
-<tr><td><label for=mqttroot>Topic root:</label></td><td><input type=text id=mqttroot name=mqttroot value=%s></td></tr>\
-<tr><td><label for=mqtttopic>Topic:</label></td><td><input type=text id=mqtttopic name=mqtttopic value=%s></td></tr>\
+<center><table>\
+<tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text id=ctlrname name=ctlrname value=%s></td></tr>\
+<tr><td><label for=mqtthost>MQTT Broker:</label></td><td><input type=text id=mqtthost name=mqtthost value=%s></td></tr>\
+<tr><td><label for=mqttport>MQTT Port:</label></td><td><input type=text id=mqttport name=mqttport value=%s></td></tr>\
+<tr><td><label for=mqttuser>MQTT User:</label></td><td><input type=text id=mqttuser name=mqttuser value=%s></td></tr>\
+<tr><td><label for=mqttuser>MQTT Password:</label></td><td><input type=text id=mqttpwd name=mqttpwd value=%s></td></tr>\
+<tr><td><label for=mqttroot>MQTT Topic root:</label></td><td><input type=text id=mqttroot name=mqttroot value=%s></td></tr>\
+<tr><td><label for=mqtttopic>MQTT Topic:</label></td><td><input type=text id=mqtttopic name=mqtttopic value=%s></td></tr>\
 <tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
 </table></center>\
 </FORM>\
 </BODY>",
            persistant.controllername,
-           //persistant.wifissid,
-           //persistant.wifipsk,
-           "Hard Coded",
-           "Hard Coded",
            persistant.mqtthost,
            persistant.mqttport,
            persistant.mqttuser,

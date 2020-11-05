@@ -45,7 +45,7 @@ char* upTime(char* buffer)
   int mins = (now % (1000 * 60 * 60)) / (1000 * 60);
   int secs = (now % (1000 * 60)) / 1000;
   int millisecs = now % 1000;
-  sprintf(buffer, "%d days, %d hours, %d minutes, %d.%03d seconds", days, hours, mins, secs, millisecs);
+  sprintf(buffer, "%d:%d:%d:%d.%03d", days, hours, mins, secs, millisecs);
   return buffer;
 }
 

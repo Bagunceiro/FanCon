@@ -29,8 +29,6 @@ bool OTAinit = false;
 
 void initOTA()
 {
-  Serial.println("initOTA");
-  Serial.printf("Hostname to %s\n", persistant.controllername);
   ArduinoOTA.setHostname(persistant.controllername);
   ArduinoOTA.onStart([]() { // Enter safe state for the upgrade
     lamp.sw(0);
@@ -67,8 +65,6 @@ void initWiFi()
     wifimulti.addAP("asgard2", "enaLkraP");
 
     wifimulti.run();
-
-    Serial.println("WiFi begun");
 
     lastAttempt = now;
     MDNS.begin(persistant.controllername);
