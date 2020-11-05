@@ -3,15 +3,15 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
-   const char* configBlock::wifissid_n = "wifissid";
-   const char* configBlock::wifipsk_n;
-   const char* configBlock::controllername_n;
-   const char* configBlock::mqtthost_n;
-   const char* configBlock::mqttport_n;
-   const char* configBlock::mqttuser_n;
-   const char* configBlock::mqttpwd_n;
-   const char* configBlock::mqttroot_n;
-   const char* configBlock::mqtttopic_n;
+   const char* configBlock::wifissid_n       = "wifissid";
+   const char* configBlock::wifipsk_n        = "wifipsk";
+   const char* configBlock::controllername_n = "controllername";
+   const char* configBlock::mqtthost_n       = "mqtthost";
+   const char* configBlock::mqttport_n       = "mqttport";
+   const char* configBlock::mqttuser_n       = "mqttuser";
+   const char* configBlock::mqttpwd_n        = "mqttpwd";
+   const char* configBlock::mqttroot_n       = "mqttroot";
+   const char* configBlock::mqtttopic_n      = "mqtttopic";
 
 const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
@@ -121,15 +121,15 @@ Serial.println("writeFile");
   else {
     Serial.println("Building doc");
  
-  doc["wifissid"] = wifissid;
-  doc["wifipsk"] = wifipsk;
-  doc["controllername"] = controllername;
-  doc["mqtthost"] = mqtthost;
-  doc["mqttport"] = mqttport;
-  doc["mqttuser"] = mqttuser;
-  doc["mqttpwd"] = mqttpwd;
-  doc["mqttroot"] = mqttroot;
-  doc["mqtttopic"] = mqtttopic;
+  doc[wifissid_n] = wifissid;
+  doc[wifipsk_n] = wifipsk;
+  doc[controllername_n] = controllername;
+  doc[mqtthost_n] = mqtthost;
+  doc[mqttport_n] = mqttport;
+  doc[mqttuser_n] = mqttuser;
+  doc[mqttpwd_n] = mqttpwd;
+  doc[mqttroot_n] = mqttroot;
+  doc[mqtttopic_n] = mqtttopic;
   Serial.println("writing file");
   serializeJson(doc, configFile);
   }
@@ -160,15 +160,15 @@ bool configBlock::readFile()
   }
   // Serial.println("Read Config -");
 
-  strlcpy(wifissid,       doc["wifissid"] | "asgard_2g",    sizeof(wifissid));
-  strlcpy(wifipsk,        doc["wifipsk"]  | "enaLkraP",     sizeof(wifipsk));
-  strlcpy(controllername, doc["controllername"] | "FanCon", sizeof(controllername));
-  strlcpy(mqtthost,       doc["mqtthost"] | "",             sizeof(mqtthost));
-  strlcpy(mqttport,       doc["mqttport"] | "",             sizeof(mqttport));
-  strlcpy(mqttuser,       doc["mqttuser"] | "",             sizeof(mqttuser));
-  strlcpy(mqttpwd,        doc["mqttpwd"]  | "",             sizeof(mqttpwd));
-  strlcpy(mqttroot,       doc["mqttroot"] | "",             sizeof(mqttroot));
-  strlcpy(mqtttopic,      doc["mqtttopic"] | "",            sizeof(mqtttopic));
+  strlcpy(wifissid,       doc[wifissid_n] | "asgard_2g",    sizeof(wifissid));
+  strlcpy(wifipsk,        doc[wifipsk_n]  | "enaLkraP",     sizeof(wifipsk));
+  strlcpy(controllername, doc[controllername_n] | "FanCon", sizeof(controllername));
+  strlcpy(mqtthost,       doc[mqtthost_n] | "",             sizeof(mqtthost));
+  strlcpy(mqttport,       doc[mqttport_n] | "",             sizeof(mqttport));
+  strlcpy(mqttuser,       doc[mqttuser_n] | "",             sizeof(mqttuser));
+  strlcpy(mqttpwd,        doc[mqttpwd_n]  | "",             sizeof(mqttpwd));
+  strlcpy(mqttroot,       doc[mqttroot_n] | "",             sizeof(mqttroot));
+  strlcpy(mqtttopic,      doc[mqtttopic_n] | "",            sizeof(mqtttopic));
   // Close the file (Curiously, File's destructor doesn't close the file)
   
   configFile.close();
