@@ -46,12 +46,19 @@ struct configBlock
   char mqttroot[16];
   char mqtttopic[16];
 
+  static const char* wifissid_n;
+  static const char* wifipsk_n;
+  static const char* controllername_n;
+  static const char* mqtthost_n;
+  static const char* mqttport_n;
+  static const char* mqttuser_n;
+  static const char* mqttpwd_n;
+  static const char* mqttroot_n;
+  static const char* mqtttopic_n;
+
   void dump();
-  // bool read();
   bool writeFile();
   bool readFile();
-  // bool write(uint32_t magic = MAGIC);
-  // bool valid();
 };
 
 extern configBlock persistant;

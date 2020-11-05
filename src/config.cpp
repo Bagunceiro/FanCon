@@ -3,6 +3,16 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
+   const char* configBlock::wifissid_n = "wifissid";
+   const char* configBlock::wifipsk_n;
+   const char* configBlock::controllername_n;
+   const char* configBlock::mqtthost_n;
+   const char* configBlock::mqttport_n;
+   const char* configBlock::mqttuser_n;
+   const char* configBlock::mqttpwd_n;
+   const char* configBlock::mqttroot_n;
+   const char* configBlock::mqtttopic_n;
+
 const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
 const char* PSK  = "enaLkraP";
