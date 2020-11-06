@@ -47,13 +47,19 @@ void initOTA()
   OTAinit = true;
 }
 
+int wifiattemptcount = 0;
+
 void initWiFi()
 {
   static unsigned long lastAttempt = 0;
   unsigned long now = millis();
+  unsigned long pause = WIFI_CONNECT_ATTEMPT_PAUSE;
 
-  if ((lastAttempt == 0) || ((now - lastAttempt) > WIFI_CONNECT_ATTEMPT_PAUSE))
+  if (wifiattemptcount < 20) pause = 500;
+
+  if ((lastAttempt == 0) || ((now - lastAttempt) > pause))
   {
+    wifiattemptcount++;
     Serial.print("Connecting to WiFi: ");
     Serial.print(persistant.wifissid);
     Serial.print("/");
@@ -84,13 +90,9 @@ void setup() {
   Serial.println("");
   Serial.println("Fancon Starting");
 
-  // persistant.read();
-  // persistant.dump();
-  // persistant.writeFile();
   if (persistant.readFile() == false)
   {
     persistant.writeFile();
-
   }
   persistant.dump();
 
@@ -113,6 +115,7 @@ void loop()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
+    wifiattemptcount = 0;
     if (mqttClient.connected())
     {
       mqttClient.loop();
@@ -133,7 +136,6 @@ void loop()
     OTAinit = false;
     initWiFi();
   }
-
 
   ArduinoOTA.handle();
   server.handleClient();
