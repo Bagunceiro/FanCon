@@ -31,7 +31,6 @@ const int IR_DETECTOR_PIN = 5;
 const unsigned int MQTT_CONNECT_ATTEMPT_PAUSE = 30000; // Delay between attempts to reconnect MQTT (ms)
 const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE = 15000;
 
-const int IRDEBOUNCE = 200; // Number of milliseconds to leave fallow between IR messages
 
 #define MAGIC 0xc0ffee
 

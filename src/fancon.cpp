@@ -6,15 +6,16 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
-const char* version = "FanCon 1.0.1";
-const char* compDate = __DATE__;
-const char* compTime = __TIME__;
+const char *version = "FanCon 1.1.0";
+const char *compDate = __DATE__;
+const char *compTime = __TIME__;
 
 #include "config.h"
 #include "spdt.h"
 #include "mqtt.h"
 #include "infrared.h"
 #include "webserver.h"
+#include "configurator.h"
 #include "lamp.h"
 #include "fan.h"
 
@@ -24,6 +25,7 @@ PubSubClient mqttClient(wifiClient);
 
 Lamp lamp("light");
 Fan fan("fan");
+Configurator configurator;
 
 bool OTAinit = false;
 
@@ -36,7 +38,7 @@ void initOTA()
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
   });
-  ArduinoOTA.onEnd([]() {   // Sgnal completion of upgrade? How about flash the lights?
+  ArduinoOTA.onEnd([]() { // Sgnal completion of upgrade? How about flash the lights?
   });
   ArduinoOTA.onError([](ota_error_t error) {
     (void)error;
@@ -55,7 +57,8 @@ void initWiFi()
   unsigned long now = millis();
   unsigned long pause = WIFI_CONNECT_ATTEMPT_PAUSE;
 
-  if (wifiattemptcount < 20) pause = 500;
+  if (wifiattemptcount < 20)
+    pause = 500;
 
   if ((lastAttempt == 0) || ((now - lastAttempt) > pause))
   {
@@ -80,12 +83,15 @@ void initWiFi()
 
 os_timer_t myTimer;
 
-void timedLoop(void *pArg) {
+void timedLoop(void *pArg)
+{
   lamp.pollSwitch();
   pollIR();
 }
 
-void setup() {
+void setup()
+{
+  WiFi.mode(WIFI_STA);
   Serial.begin(9600);
   Serial.println("");
   Serial.println("Fancon Starting");
@@ -100,7 +106,8 @@ void setup() {
 
   String ctlr = persistant.controllername;
 
-  lamp.init(LIGHT_SWITCH_PIN, LIGHT_RELAY_PIN);  lamp.pollSwitch();
+  lamp.init(LIGHT_SWITCH_PIN, LIGHT_RELAY_PIN);
+  lamp.pollSwitch();
   fan.init(DIR_RELAY1_PIN, DIR_RELAY2_PIN, SPD_RELAY1_PIN, SPD_RELAY2_PIN);
 
   irrecv.enableIRIn();
@@ -113,6 +120,7 @@ void setup() {
 
 void loop()
 {
+
   if (WiFi.status() == WL_CONNECTED)
   {
     wifiattemptcount = 0;
@@ -139,4 +147,15 @@ void loop()
 
   ArduinoOTA.handle();
   server.handleClient();
+  configurator.poll();
+
+  /*
+  static bool doneCFG = false;
+  if ((millis() > 30000) && !doneCFG)
+  {
+    Serial.println("Configurator test");
+    doneCFG = true;
+    configurator.start();
+  }
+  */
 }

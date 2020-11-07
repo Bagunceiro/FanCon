@@ -41,7 +41,6 @@ tr:nth-child(even) { background-color: #dddddd;}\
 void outputMessage()
 {
   const unsigned int maxPageSize = 1024;
-  char buffer[64];
   char temp[maxPageSize];
 
   snprintf(temp, maxPageSize,
@@ -151,6 +150,36 @@ tr:nth-child(even) { background-color: #dddddd;}\
   server.send(200, "text/html", temp);
 }
 
+void handleNetConfig()
+{
+  const int maxPageSize = 2048;
+
+  char temp[maxPageSize];
+
+  snprintf(temp, maxPageSize,
+           "<HEAD><title>Controller Network Configuration</title><style>\
+body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
+input {font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
+table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
+th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
+tr:nth-child(even) { background-color: #dddddd;}\
+</style>\
+</HEAD><BODY>\
+<H1>Controller %s Network Configuration</H1>\
+<FORM method=post action=/config.update>\
+<center><table>\
+<tr><td><label for=ssid>SSID:</label></td><td><input type=text name=%s value=%s></td></tr>\
+<tr><td><label for=psk>PSK:</label></td><td><input type=text name=%s value=%s></td></tr>\
+<tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
+</table></center>\
+</FORM>\
+</BODY>",
+           persistant.controllername,
+           persistant.wifissid_n,       persistant.wifissid,
+           persistant.wifipsk_n,       persistant.wifipsk);
+  server.send(200, "text/html", temp);
+}
+
 void initWebServer()
 {
   server.on("/", handleRoot);
@@ -162,4 +191,10 @@ void initWebServer()
   //  sprintf(ssid, "c_%c%c%c%c%c%c", mac[9], mac[10], mac[12], mac[13], mac[15], mac[16]);
   //  Serial.print("SSID = "); Serial.println(ssid);
   server.begin();
+}
+
+void restartWebServer()
+{
+  server.stop();
+  initWebServer();
 }

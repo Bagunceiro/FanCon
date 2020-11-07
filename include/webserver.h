@@ -10,5 +10,6 @@ void handlePost();
 void handleRoot();
 void handleConfig();
 void initWebServer();
+void restartWebServer();
 
 #endif

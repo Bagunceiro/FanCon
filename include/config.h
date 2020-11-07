@@ -29,7 +29,6 @@ extern const unsigned int MQTT_CONNECT_ATTEMPT_PAUSE; // Delay between attempts 
 extern const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE;
 
 
-extern const int IRDEBOUNCE; // Number of milliseconds to leave fallow between IR messages
 
 // #define MAGIC 0xc0ffee
 

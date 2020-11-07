@@ -2,6 +2,8 @@
 #include "config.h"
 #include "infrared.h"
 
+const int IRDEBOUNCE = 200; // Number of milliseconds to leave fallow between IR messages
+
 IRControlled* IRControlled::list = NULL;
 
 IRControlled::IRControlled()
