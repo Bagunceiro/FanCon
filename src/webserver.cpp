@@ -4,22 +4,29 @@
 
 ESP8266WebServer server(80);
 
+const String style("<style>\
+body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
+table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
+th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
+tr:nth-child(even) { background-color: #dddddd;}\
+button {font-size: 4vw}\
+</style>");
+
+const String head1("<HEAD><TITLE>");
+const String head2("</TITLE>");
+const String headEnd("</HEAD>");
+
 void handleRoot()
 {
   const unsigned int maxPageSize = 1024;
   char buffer[64];
-  char temp[maxPageSize];
+  char body[maxPageSize];
 
-  snprintf(temp, maxPageSize,
-           "<HEAD><title>Controller</title><style>\
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
-th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
-button {font-size: 4vw}\
-tr:nth-child(even) { background-color: #dddddd;}\
-</style>\
-<script>function goconf() {location.assign('config');}</script>\
-</HEAD><BODY>\
+  const String title("Controller");
+  const String head3("<script>function goconf() {location.assign('config');}</script>");
+
+  snprintf(body, maxPageSize,
+           "<BODY>\
 <H1>Controller %s</H1>\
 <TABLE>\
 <TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>\
@@ -33,38 +40,42 @@ tr:nth-child(even) { background-color: #dddddd;}\
            version, compTime, compDate,
            WiFi.macAddress().c_str(),
            upTime(buffer),
-           WiFi.SSID().c_str()
-           );
-  server.send(200, "text/html", temp);
+           WiFi.SSID().c_str());
+  int contentLength = head1.length() + title.length() + head2.length() + style.length() + head3.length() + headEnd.length() + strlen(body);
+
+  server.setContentLength(contentLength);
+  server.send(200, "text/html", head1);
+  server.sendContent(title);
+  server.sendContent(head2);
+  server.sendContent(style);
+  server.sendContent(head3);
+  server.sendContent(headEnd);
+  server.sendContent(body);
 }
 
-void outputMessage()
+void resetMessage()
 {
-  const unsigned int maxPageSize = 1024;
-  char temp[maxPageSize];
+  const String title("Controller");
+  const String head3 = "<meta http-equiv=\"refresh\" content=\"15;url=/\" />";
+  const int maxBody = 96;
+  char body[maxBody];
+  snprintf(body, maxBody, "<BODY><H1>Controller %s</H1>Resetting, please wait</BODY>", persistant.controllername);
 
-  snprintf(temp, maxPageSize,
-           "<HEAD><title>Controller</title><style>\
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
-th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
-button {font-size: 4vw}\
-tr:nth-child(even) { background-color: #dddddd;}\
-</style>\
-<meta http-equiv=\"refresh\" content=\"15;url=/\" />\
-</HEAD><BODY>\
-<H1>Controller %s</H1>\
-<BODY>\
-Resetting, please wait\
-</BODY>",
-           persistant.controllername
-           );
-  server.send(200, "text/html", temp);
+int contentLength = head1.length() + title.length() + head2.length() + style.length() + head3.length() + headEnd.length() + strlen(body);
+
+server.setContentLength(contentLength);
+server.send(200, "text/html", head1);
+server.sendContent(title);
+server.sendContent(head2);
+server.sendContent(style);
+server.sendContent(head3);
+server.sendContent(headEnd);
+server.sendContent(body);
 }
 
 void handlePost()
 {
-  outputMessage();
+  resetMessage();
   if (server.method() == HTTP_POST)
   {
 
@@ -141,12 +152,12 @@ tr:nth-child(even) { background-color: #dddddd;}\
 </FORM>\
 </BODY>",
            persistant.controllername_n, persistant.controllername,
-           persistant.mqtthost_n,       persistant.mqtthost,
-           persistant.mqttport_n,       persistant.mqttport,
-           persistant.mqttuser_n,       persistant.mqttuser,
-           persistant.mqttpwd_n,        persistant.mqttpwd,
-           persistant.mqttroot_n,       persistant.mqttroot,
-           persistant.mqtttopic_n,      persistant.mqtttopic);
+           persistant.mqtthost_n, persistant.mqtthost,
+           persistant.mqttport_n, persistant.mqttport,
+           persistant.mqttuser_n, persistant.mqttuser,
+           persistant.mqttpwd_n, persistant.mqttpwd,
+           persistant.mqttroot_n, persistant.mqttroot,
+           persistant.mqtttopic_n, persistant.mqtttopic);
   server.send(200, "text/html", temp);
 }
 
@@ -175,8 +186,8 @@ tr:nth-child(even) { background-color: #dddddd;}\
 </FORM>\
 </BODY>",
            persistant.controllername,
-           persistant.wifissid_n,       persistant.wifissid,
-           persistant.wifipsk_n,       persistant.wifipsk);
+           persistant.wifissid_n, persistant.wifissid,
+           persistant.wifipsk_n, persistant.wifipsk);
   server.send(200, "text/html", temp);
 }
 
