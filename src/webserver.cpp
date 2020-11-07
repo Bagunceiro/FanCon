@@ -16,6 +16,26 @@ const String head1("<HEAD><TITLE>");
 const String head2("</TITLE>");
 const String headEnd("</HEAD>");
 
+void sendPage(const String &s1,
+              const String &s2,
+              const String &s3,
+              const String &s4,
+              const String &s5,
+              const String &s6,
+              const String &s7)
+{
+  int contentLength = s1.length() + s2.length() + s3.length() + s4.length() + s5.length() + s6.length() + s7.length();
+
+  server.setContentLength(contentLength);
+  server.send(200, "text/html", s1);
+  server.sendContent(s2);
+  server.sendContent(s3);
+  server.sendContent(s4);
+  server.sendContent(s5);
+  server.sendContent(s6);
+  server.sendContent(s7);
+}
+
 void handleRoot()
 {
   const unsigned int maxPageSize = 1024;
@@ -41,16 +61,8 @@ void handleRoot()
            WiFi.macAddress().c_str(),
            upTime(buffer),
            WiFi.SSID().c_str());
-  int contentLength = head1.length() + title.length() + head2.length() + style.length() + head3.length() + headEnd.length() + strlen(body);
 
-  server.setContentLength(contentLength);
-  server.send(200, "text/html", head1);
-  server.sendContent(title);
-  server.sendContent(head2);
-  server.sendContent(style);
-  server.sendContent(head3);
-  server.sendContent(headEnd);
-  server.sendContent(body);
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void resetMessage()
@@ -61,16 +73,7 @@ void resetMessage()
   char body[maxBody];
   snprintf(body, maxBody, "<BODY><H1>Controller %s</H1>Resetting, please wait</BODY>", persistant.controllername);
 
-int contentLength = head1.length() + title.length() + head2.length() + style.length() + head3.length() + headEnd.length() + strlen(body);
-
-server.setContentLength(contentLength);
-server.send(200, "text/html", head1);
-server.sendContent(title);
-server.sendContent(head2);
-server.sendContent(style);
-server.sendContent(head3);
-server.sendContent(headEnd);
-server.sendContent(body);
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void handlePost()
@@ -126,17 +129,12 @@ void handleConfig()
 {
   const int maxPageSize = 2048;
 
-  char temp[maxPageSize];
+  String title("<title>Controller Configuration</title>");
+  String head3("");
+  char body[maxPageSize];
 
-  snprintf(temp, maxPageSize,
-           "<HEAD><title>Controller Configuration</title><style>\
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
-input {font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
-th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
-tr:nth-child(even) { background-color: #dddddd;}\
-</style>\
-</HEAD><BODY>\
+  snprintf(body, maxPageSize,
+           "<BODY>\
 <H1>Controller Configuration</H1>\
 <FORM method=post action=/config.update>\
 <center><table>\
@@ -158,37 +156,36 @@ tr:nth-child(even) { background-color: #dddddd;}\
            persistant.mqttpwd_n, persistant.mqttpwd,
            persistant.mqttroot_n, persistant.mqttroot,
            persistant.mqtttopic_n, persistant.mqtttopic);
-  server.send(200, "text/html", temp);
+
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void handleNetConfig()
 {
-  const int maxPageSize = 2048;
-
-  char temp[maxPageSize];
-
-  snprintf(temp, maxPageSize,
-           "<HEAD><title>Controller Network Configuration</title><style>\
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
-input {font-family:Arial, Helvetica, Sans-Serif; font-size: 4vw; Color:#000088;}\
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
-th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
-tr:nth-child(even) { background-color: #dddddd;}\
-</style>\
-</HEAD><BODY>\
+  String title("<title>Controller Network Configuration</title>");
+  String head3("");
+  String body("<BODY>\
 <H1>Controller %s Network Configuration</H1>\
 <FORM method=post action=/config.update>\
-<center><table>\
-<tr><td><label for=ssid>SSID:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=psk>PSK:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
+<center><table><tr><th>SSID</th><th>PSK</th><tr>");
+
+  for (int i = 0; i < 2; i++)
+  {
+    const int maxNetLine = 64;
+    char buffer[64];
+    snprintf(buffer, maxNetLine,
+             "<tr><td><input type=text name=%s value=%s></td><td><input type=password name=%s value=%s></td></tr>",
+             "ssid1", "asgard_2g", "psk1", "enaLkraP");
+    body += buffer;
+  }
+
+  body +=
+      "<tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
 </table></center>\
 </FORM>\
-</BODY>",
-           persistant.controllername,
-           persistant.wifissid_n, persistant.wifissid,
-           persistant.wifipsk_n, persistant.wifipsk);
-  server.send(200, "text/html", temp);
+</BODY>";
+
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void initWebServer()
