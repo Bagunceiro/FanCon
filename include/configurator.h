@@ -18,4 +18,6 @@ private:
     bool running;
 };
 
+
+
 #endif // FC_CONFIGURATOR_H

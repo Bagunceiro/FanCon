@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <LittleFS.h>
 #include "config.h"
 #include "configurator.h"
 #include "lamp.h"
@@ -58,3 +59,4 @@ void Configurator::poll()
         }
     }
 }
+

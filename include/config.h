@@ -60,6 +60,8 @@ struct configBlock
   bool readFile();
 };
 
+
+
 extern configBlock persistant;
 
 char* upTime(char* buffer);

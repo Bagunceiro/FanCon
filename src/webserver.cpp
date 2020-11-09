@@ -1,18 +1,28 @@
 #include <Arduino.h>
 #include "config.h"
 #include "webserver.h"
+#include "networks.h"
 
 ESP8266WebServer server(80);
 
-const String style("<style>\
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}\
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}\
-th, td {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }\
-tr:nth-child(even) { background-color: #dddddd;}\
-button {font-size: 4vw}\
-</style>");
+const String style = R"=====(
+<style>
+body {font-family:Arial, Sans-Serif; font-size: 4vw;}
+table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}
+th, td, input {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }
+tr:nth-child(even) { background-color: lightblue;}
+button {font-size: 4vw}
+input[type=checkbox] {display:none;}
+input[type=checkbox] + label:before {content:"☐  ";}
+input:checked + label:before {content:"☑  ";}
+</style>
+)=====";
 
-const String head1("<HEAD><TITLE>");
+const String head1(R"=====(
+<HEAD><meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<TITLE>
+)=====");
+
 const String head2("</TITLE>");
 const String headEnd("</HEAD>");
 
@@ -43,19 +53,22 @@ void handleRoot()
   char body[maxPageSize];
 
   const String title("Controller");
-  const String head3("<script>function goconf() {location.assign('config');}</script>");
+  const String head3("<script>function gomqttconf() {location.assign('config.mqtt');} function gowificonf() {location.assign('config.net');}</script>");
 
-  snprintf(body, maxPageSize,
-           "<BODY>\
-<H1>Controller %s</H1>\
-<TABLE>\
-<TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>\
-<TR><TD>MAC Address</TD><TD>%s</TD></TR>\
-<TR><TD>Uptime</TD><TD>%s</TD></TR>\
-<TR><TD>WiFi SSID</TD><TD>%s</TD></TR>\
-</TABLE><BR>\
-<button type=button onclick=goconf()>Configure</button>\
-</BODY>",
+  snprintf(body, maxPageSize, R"=====(
+<BODY>
+<H1>Controller %s</H1>
+<TABLE>
+<TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>
+<TR><TD>MAC Address</TD><TD>%s</TD></TR>
+<TR><TD>Uptime</TD><TD>%s</TD></TR>
+<TR><TD>WiFi SSID</TD><TD>%s</TD></TR>
+</TABLE><BR>
+Configure:
+<button type=button onclick=gomqttconf()>MQTT</button>
+<button type=button onclick=gowificonf()>WiFi</button>
+</BODY>
+  )=====",
            persistant.controllername,
            version, compTime, compDate,
            WiFi.macAddress().c_str(),
@@ -116,7 +129,7 @@ void handlePost()
     }
     persistant.dump();
     persistant.writeFile();
-    handleConfig();
+    // handleConfig();
     Serial.println("Resetting");
 
     delay(3000);
@@ -125,7 +138,7 @@ void handlePost()
   }
 }
 
-void handleConfig()
+void handleMQTTConfig()
 {
   const int maxPageSize = 2048;
 
@@ -133,22 +146,23 @@ void handleConfig()
   String head3("");
   char body[maxPageSize];
 
-  snprintf(body, maxPageSize,
-           "<BODY>\
-<H1>Controller Configuration</H1>\
-<FORM method=post action=/config.update>\
-<center><table>\
-<tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqtthost>MQTT Broker:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqttport>MQTT Port:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqttuser>MQTT User:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqttuser>MQTT Password:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqttroot>MQTT Topic root:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td><label for=mqtttopic>MQTT Topic:</label></td><td><input type=text name=%s value=%s></td></tr>\
-<tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
-</table></center>\
-</FORM>\
-</BODY>",
+  snprintf(body, maxPageSize, R"=====(
+<BODY>
+<H1>Controller Configuration</H1>
+<FORM method=post action=/config.update>
+<center><table>
+<tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqtthost>MQTT Broker:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqttport>MQTT Port:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqttuser>MQTT User:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqttuser>MQTT Password:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqttroot>MQTT Topic root:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=mqtttopic>MQTT Topic:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td colspan=2><input type=submit value="Save and Reset"></center></td></tr>
+</table></center>
+</FORM>
+</BODY>
+)=====",
            persistant.controllername_n, persistant.controllername,
            persistant.mqtthost_n, persistant.mqtthost,
            persistant.mqttport_n, persistant.mqttport,
@@ -160,30 +174,77 @@ void handleConfig()
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
-void handleNetConfig()
+String &listNetworks(String &body, networkList &networks, bool selected)
 {
-  String title("<title>Controller Network Configuration</title>");
-  String head3("");
-  String body("<BODY>\
-<H1>Controller %s Network Configuration</H1>\
-<FORM method=post action=/config.update>\
-<center><table><tr><th>SSID</th><th>PSK</th><tr>");
-
-  for (int i = 0; i < 2; i++)
+  for (unsigned int i = 0; i < networks.size(); i++)
   {
-    const int maxNetLine = 64;
-    char buffer[64];
-    snprintf(buffer, maxNetLine,
-             "<tr><td><input type=text name=%s value=%s></td><td><input type=password name=%s value=%s></td></tr>",
-             "ssid1", "asgard_2g", "psk1", "enaLkraP");
+    const int maxNetLine = 256;
+    char buffer[maxNetLine];
+    snprintf(buffer, maxNetLine, R"=====(
+<input type=checkbox %s id=%s%i name=%s></input>
+<label for=%s%i>&nbsp;</label><input name=%s value=%s readonly></input> %s<br>
+)=====",
+             (selected ? "checked" : ""), selected?"cf":"ds", i, "conf", selected?"cf":"ds", i, "ssid", networks[i].ssid.c_str(), (networks[i].openNet ? "🔓" : "🔒"));
     body += buffer;
   }
+  return body;
+}
 
-  body +=
-      "<tr><td colspan=2><input type=submit value=\"Save and Reset\"></center></td></tr>\
-</table></center>\
-</FORM>\
-</BODY>";
+bool sortByRSSI(WiFiNetworkDef i, WiFiNetworkDef j)
+{
+  return (i.rssi > j.rssi);
+}
+
+void handleNetConfig()
+{
+  if (server.method() == HTTP_POST)
+  {
+    Serial.println("Network Update");
+    networkList newlist;
+    
+    bool usenext = false;
+    for (uint8_t i = 0; i < server.args(); i++)
+    {
+      const String argName = server.argName(i);
+      const String value = server.arg(i);
+      // Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
+
+      if (usenext && (argName == "ssid"))
+      {
+        Serial.println(value);
+        addNetwork(newlist, value);
+      }
+      
+      if (argName == "conf")
+      {
+        usenext = true;
+      }
+      else usenext = false;
+    }
+    /*
+    networkList tnetworks;
+    WiFiNetworkDef network("asgard_2g", "enaLkraP");
+    tnetworks.push_back(network);
+    WiFiNetworkDef network2("another", "password");
+    tnetworks.push_back(network2);
+    networkConfWrite(tnetworks);
+    */
+    networkConfWrite(newlist);
+  }
+  networkList& cnetworks = networkConfRead();
+  String title("WiFi Configuration");
+  String head3("");
+  String body(R"====(<BODY><H1>Controller Network Configuration</H1>
+  <FORM method=post action=/config.net><INPUT type=submit value="Update">
+  <H2>Configured Networks</H2>
+  )====");
+
+  listNetworks(body, cnetworks, true);
+  body += "<H2>Discovered Networks</H2>";
+  networkList &snetworks = scanNetworks();
+  std::sort(snetworks.begin(), snetworks.end(), sortByRSSI);
+  listNetworks(body, snetworks, false);
+  body += "</FORM></BODY>";
 
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
@@ -191,8 +252,10 @@ void handleNetConfig()
 void initWebServer()
 {
   server.on("/", handleRoot);
-  server.on("/config", handleConfig);
+  server.on("/config.mqtt", handleMQTTConfig);
   server.on("/config.update", handlePost);
+  server.on("/config.net", handleNetConfig);
+  Serial.println("Web Server☑");
 
   //  String mac = WiFi.macAddress();
   // char ssid[24];

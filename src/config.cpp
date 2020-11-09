@@ -71,39 +71,6 @@ void configBlock::dump()
   Serial.print("mqtttopic: "); Serial.println(mqtttopic);
 }
 
-/*
-bool configBlock::read()
-{
-  EEPROM.begin(sizeof(*this));
-  EEPROM.get(0, *this);
-
-  EEPROM.end();
-  if (!valid())
-  {
-    memset(this, 0, sizeof(*this));
-    magicnumber = MAGIC;
-    strcpy(controllername, "FanCon"); // Use MAC?
-    strcpy(mqttport, "1883");
-    write();
-  }
-  // TEMPORARY(?) HARD CODED
-  strcpy(wifissid, SSID);
-  strcpy(wifipsk,  PSK);
-  return true;
-}
-*/
-
-/*
-bool configBlock::write(uint32_t magic)
-{
-  EEPROM.begin(sizeof(*this));
-  EEPROM.put(0, *this);
-  EEPROM.commit();
-  EEPROM.end();
-  return true;
-}
-*/
-
 bool configBlock::writeFile()
 {
   StaticJsonDocument<512> doc;
@@ -175,10 +142,3 @@ bool configBlock::readFile()
   LittleFS.end();
   return result;
 }
-
-/*
-bool configBlock::valid()
-{
-  return (magicnumber == MAGIC);
-}
-*/
