@@ -23,6 +23,7 @@ extern bool networkConfWrite(networkList& list);
 extern networkList& networkConfRead();
 extern networkList& scanNetworks();
 extern void addNetwork(networkList& netlist, const String& ssid);
+extern void updateWiFiDef(WiFiNetworkDef&);
 
 // extern networkList& configuredNetworks();
 

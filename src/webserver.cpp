@@ -89,7 +89,7 @@ void resetMessage()
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
-void handlePost()
+void handleMQTTUpdate()
 {
   resetMessage();
   if (server.method() == HTTP_POST)
@@ -182,9 +182,12 @@ String &listNetworks(String &body, networkList &networks, bool selected)
     char buffer[maxNetLine];
     snprintf(buffer, maxNetLine, R"=====(
 <input type=checkbox %s id=%s%i name=%s></input>
-<label for=%s%i>&nbsp;</label><input name=%s value=%s readonly></input> %s<br>
+<label for=%s%i>&nbsp;</label>%s <a href="/config.netedit?ssid=%s">%s<br>
 )=====",
-             (selected ? "checked" : ""), selected?"cf":"ds", i, "conf", selected?"cf":"ds", i, "ssid", networks[i].ssid.c_str(), (networks[i].openNet ? "🔓" : "🔒"));
+             (selected ? "checked" : ""), selected ? "cf" : "ds", i,
+             "conf", selected ? "cf" : "ds", i,
+             (networks[i].openNet ? "🔓" : "🔒"),
+             networks[i].ssid.c_str(), networks[i].ssid.c_str());
     body += buffer;
   }
   return body;
@@ -201,7 +204,7 @@ void handleNetConfig()
   {
     Serial.println("Network Update");
     networkList newlist;
-    
+
     bool usenext = false;
     for (uint8_t i = 0; i < server.args(); i++)
     {
@@ -214,12 +217,13 @@ void handleNetConfig()
         Serial.println(value);
         addNetwork(newlist, value);
       }
-      
+
       if (argName == "conf")
       {
         usenext = true;
       }
-      else usenext = false;
+      else
+        usenext = false;
     }
     /*
     networkList tnetworks;
@@ -231,8 +235,8 @@ void handleNetConfig()
     */
     networkConfWrite(newlist);
   }
-  networkList& cnetworks = networkConfRead();
-  String title("WiFi Configuration");
+  networkList &cnetworks = networkConfRead();
+  String title("WiFi Networks");
   String head3("");
   String body(R"====(<BODY><H1>Controller Network Configuration</H1>
   <FORM method=post action=/config.net><INPUT type=submit value="Update">
@@ -249,12 +253,63 @@ void handleNetConfig()
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
+void handleNewNet()
+{
+  WiFiNetworkDef net("");
+  net.openNet = true;
+
+  if (server.method() == HTTP_POST)
+  {
+
+    for (uint8_t i = 0; i < server.args(); i++)
+    {
+      const String argName = "server.argName(i)";
+
+      if (argName == "ssid")
+      {
+        net.ssid = server.arg(i);
+      }
+      else if (argName == "psk")
+      {
+        net.psk = server.arg(i);
+        net.openNet = false;
+      }
+    }
+  }
+  updateWiFiDef(net);
+}
+
+void handleNetEdit()
+{
+  String ssid;
+  for (int i = 0; i < server.args(); i++)
+  {
+    if (server.argName(i) == "ssid")
+    {
+      ssid = server.arg(i);
+      break;
+    }
+    String title("WiFi Network");
+  String head3("");
+  String body(R"====(<BODY><H1>Network Edit</H1>
+  <FORM method=post action=/config.net>
+  SSID: <INPUT type=text value=%s/><br>
+  PSK: <INPUT type=password value=%s/><br>
+  <INPUT type=submit value="Update">
+  </FORM>
+  </BODY>
+  )====");
+  }
+}
+
 void initWebServer()
 {
   server.on("/", handleRoot);
   server.on("/config.mqtt", handleMQTTConfig);
-  server.on("/config.update", handlePost);
+  server.on("/config.update", handleMQTTUpdate);
   server.on("/config.net", handleNetConfig);
+  server.on("/config.netedit", handleNetEdit);
+  server.on("/config.addnet", handleNewNet);
   Serial.println("Web Server☑");
 
   //  String mac = WiFi.macAddress();

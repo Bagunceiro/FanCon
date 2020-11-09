@@ -157,3 +157,16 @@ void addNetwork(networkList &netlist, const String &ssid)
         netlist.push_back(d);
     }
 }
+
+void updateWiFiDef(WiFiNetworkDef &net)
+{
+    for (uint16_t i = 0; i < configuredNets.size(); i++)
+    {
+        if (configuredNets[i].ssid == "ssid")
+        {
+            // Get rid of the old version
+            configuredNets.erase(configuredNets.begin()+i);
+        }
+    }
+    configuredNets.push_back(net);
+}
