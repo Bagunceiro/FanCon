@@ -50,19 +50,9 @@ networkList &scanNetworks()
     return scannedNets;
 }
 
-/*
-networkList &configuredNetworks()
-{
-    Serial.println("configured Networks");
-    networkConfRead(configuredNets);
-
-    return configuredNets;
-}
-*/
-
 networkList &networkConfRead()
 {
-    Serial.println("read Network File");
+    // Serial.println("read Network File");
 
     LittleFS.begin();
 
@@ -96,7 +86,6 @@ networkList &networkConfRead()
         }
     }
     LittleFS.end();
-    Serial.println("done");
     return configuredNets;
 }
 
@@ -105,7 +94,7 @@ bool networkConfWrite(networkList &networks)
     StaticJsonDocument<1024> doc;
     JsonArray array = doc.to<JsonArray>();
 
-    Serial.println("write Network File");
+    // Serial.println("write Network File");
 
     LittleFS.begin();
 
@@ -117,19 +106,18 @@ bool networkConfWrite(networkList &networks)
     }
     else
     {
-        Serial.println("Building doc");
+        // Serial.println("Building doc");
         for (unsigned int i = 0; i < networks.size(); i++)
         {
             JsonObject object = array.createNestedObject();
             object["ssid"] = networks[i].ssid;
             object["psk"] = networks[i].psk;
         }
-        Serial.println("writing file");
+        // Serial.println("writing file");
         serializeJson(doc, netsFile);
         netsFile.close();
     }
     LittleFS.end();
-    Serial.println("done");
     return true;
 }
 

@@ -64,12 +64,6 @@ void initWiFi()
   if ((lastAttempt == 0) || ((now - lastAttempt) > pause))
   {
     wifiattemptcount++;
-    // Serial.print("Connecting to WiFi: ");
-    // Serial.print(persistant.wifissid);
-    // Serial.print("/");
-    // Serial.println(persistant.wifipsk);
-    // WiFi.begin(persistant.wifissid, persistant.wifipsk);
-    // wifimulti.addAP(persistant.wifissid, persistant.wifipsk);
 
     connectToWiFi();
 

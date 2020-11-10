@@ -6,6 +6,11 @@
 ESP8266WebServer server(80);
 
 const String style = R"=====(
+<script>
+function gohome()     {location.assign('/');}
+function gomqttconf() {location.assign('config.mqtt');}
+function gowificonf() {location.assign('config.net');}
+</script>
 <style>
 body {font-family:Arial, Sans-Serif; font-size: 4vw;}
 table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}
@@ -53,20 +58,20 @@ void handleRoot()
   char body[maxPageSize];
 
   const String title("Controller");
-  const String head3("<script>function gomqttconf() {location.assign('config.mqtt');} function gowificonf() {location.assign('config.net');}</script>");
+  //const String head3("<script>function gomqttconf() {location.assign('config.mqtt');} function gowificonf() {location.assign('config.net');}</script>");
+  const String head3("");
 
   snprintf(body, maxPageSize, R"=====(
 <BODY>
-<H1>Controller %s</H1>
+<button type=button onclick=gomqttconf()>MQTT</button>
+<button type=button onclick=gowificonf()>WiFi</button>
+<BR><B>Controller: %s</B>
 <TABLE>
 <TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>
 <TR><TD>MAC Address</TD><TD>%s</TD></TR>
 <TR><TD>Uptime</TD><TD>%s</TD></TR>
 <TR><TD>WiFi SSID</TD><TD>%s</TD></TR>
 </TABLE><BR>
-Configure:
-<button type=button onclick=gomqttconf()>MQTT</button>
-<button type=button onclick=gowificonf()>WiFi</button>
 </BODY>
   )=====",
            persistant.controllername,
@@ -148,7 +153,8 @@ void handleMQTTConfig()
 
   snprintf(body, maxPageSize, R"=====(
 <BODY>
-<H1>Controller Configuration</H1>
+<button onclick="gohome()">Home</button>
+<BR><B>MQTT Configuration: %s</B>
 <FORM method=post action=/config.update>
 <center><table>
 <tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text name=%s value=%s></td></tr>
@@ -163,6 +169,7 @@ void handleMQTTConfig()
 </FORM>
 </BODY>
 )=====",
+           persistant.controllername,
            persistant.controllername_n, persistant.controllername,
            persistant.mqtthost_n, persistant.mqtthost,
            persistant.mqttport_n, persistant.mqttport,
@@ -217,7 +224,7 @@ void handleNetConfig()
     {
       const String argName = server.argName(i);
       const String value = server.arg(i);
-      Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
+      // Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
 
       if (usenext && (argName == "ssid"))
       {
@@ -225,22 +232,31 @@ void handleNetConfig()
         addNetwork(newlist, value);
       }
 
-      if (argName == "conf") usenext = true;
-      else usenext = false;
+      if (argName == "conf")
+        usenext = true;
+      else
+        usenext = false;
     }
     networkConfWrite(newlist);
   }
   networkList &cnetworks = networkConfRead();
   String title("WiFi Networks");
   String head3("");
-  String body(R"====(<BODY><H1>Controller Network Configuration</H1>
+  String body(R"====(
+  <BODY>
+  <button onclick="gohome()">Home</button>
+  <H1>WiFi Configuration</H1>
   <FORM method=post action=/config.net><INPUT type=submit value="Update">
   <H2>Configured Networks</H2>
   <TABLE>
   )====");
 
   listNetworks(body, cnetworks, true);
-  body += "</TABLE><H2>Discovered Networks</H2><TABLE>";
+  body += R"=====(
+  </TABLE>
+  <H2>Discovered Networks</H2>
+  <TABLE>
+  )=====";
   networkList &snetworks = scanNetworks();
   std::sort(snetworks.begin(), snetworks.end(), sortByRSSI);
   listNetworks(body, snetworks, false);
@@ -279,11 +295,15 @@ void handleNewNet()
   String title("WiFi Network");
   String head3("");
   char body[512];
-  snprintf(body, 512, R"====(<BODY><H1>Network Edit</H1>
-  Network %s Updated<br>
-  <a href="/config.net">Back to Network Configuration</a>
+  snprintf(body, 512, R"====(
+  <BODY>
+  <button onclick="gohome()">Home</button>
+  <button onclick="gowificonf()">WiFi Configuration</button>
+  <H1>WiFi Network Edit</H1>
+  WiFi Network %s Updated
   </BODY>
-  )====", net.ssid.c_str());
+  )====",
+           net.ssid.c_str());
 
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
@@ -302,14 +322,19 @@ void handleNetEdit()
   String title("WiFi Network");
   String head3("");
   char body[512];
-  snprintf(body, 512, R"====(<BODY><H1>Network Edit</H1>
+  snprintf(body, 512, R"====(
+  <BODY>
+  <button onclick="gohome()">Home</button>
+  <button onclick="gowificonf()">WiFi</button>
+  <H1>Network Edit</H1>
   <FORM method=post action=/config.addnet>
   SSID: <INPUT name=ssid value="%s"/><br>
   PSK: <INPUT type=password name=psk value=""/><br>
   <INPUT type=submit value="Update">
   </FORM>
   </BODY>
-  )====", ssid.c_str());
+  )====",
+           ssid.c_str());
 
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
