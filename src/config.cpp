@@ -3,8 +3,6 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
-   const char* configBlock::wifissid_n       = "wifissid";
-   const char* configBlock::wifipsk_n        = "wifipsk";
    const char* configBlock::controllername_n = "controllername";
    const char* configBlock::mqtthost_n       = "mqtthost";
    const char* configBlock::mqttport_n       = "mqttport";
@@ -13,9 +11,9 @@
    const char* configBlock::mqttroot_n       = "mqttroot";
    const char* configBlock::mqtttopic_n      = "mqtttopic";
 
-const char* SSID = "asgard_2g";
+// const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
-const char* PSK  = "enaLkraP";
+// const char* PSK  = "enaLkraP";
 
 const int DIR_RELAY1_PIN = 12;      // K4
 const int DIR_RELAY2_PIN = 13;      // K5
@@ -60,8 +58,6 @@ void report()
 void configBlock::dump()
 {
   // Serial.print("magicnumber: "); Serial.println(magicnumber, HEX);
-  Serial.print("wifissid: "); Serial.println(wifissid);
-  Serial.print("wifipsk: "); Serial.println(wifipsk);
   Serial.print("controllername: "); Serial.println(controllername);
   Serial.print("mqtthost: "); Serial.println(mqtthost);
   Serial.print("mqttport: "); Serial.println(mqttport);
@@ -87,8 +83,6 @@ Serial.println("writeFile");
   else {
     Serial.println("Building doc");
  
-  doc[wifissid_n] = wifissid;
-  doc[wifipsk_n] = wifipsk;
   doc[controllername_n] = controllername;
   doc[mqtthost_n] = mqtthost;
   doc[mqttport_n] = mqttport;
@@ -126,8 +120,6 @@ bool configBlock::readFile()
   }
   // Serial.println("Read Config -");
 
-  strlcpy(wifissid,       doc[wifissid_n] | "asgard_2g",    sizeof(wifissid));
-  strlcpy(wifipsk,        doc[wifipsk_n]  | "enaLkraP",     sizeof(wifipsk));
   strlcpy(controllername, doc[controllername_n] | "FanCon", sizeof(controllername));
   strlcpy(mqtthost,       doc[mqtthost_n] | "",             sizeof(mqtthost));
   strlcpy(mqttport,       doc[mqttport_n] | "",             sizeof(mqttport));

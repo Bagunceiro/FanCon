@@ -1,9 +1,15 @@
+#include <ESP8266WiFiMulti.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include "configurator.h"
 #include "networks.h"
 
 networkList configuredNets;
 networkList scannedNets;
+
+ESP8266WiFiMulti wifimulti;
+
+extern Configurator configurator;
 
 networkList &scanNetworks()
 {
@@ -162,11 +168,31 @@ void updateWiFiDef(WiFiNetworkDef &net)
 {
     for (uint16_t i = 0; i < configuredNets.size(); i++)
     {
-        if (configuredNets[i].ssid == "ssid")
+        if (configuredNets[i].ssid == net.ssid)
         {
             // Get rid of the old version
-            configuredNets.erase(configuredNets.begin()+i);
+            configuredNets.erase(configuredNets.begin() + i);
         }
     }
     configuredNets.push_back(net);
+    networkConfWrite(configuredNets);
+}
+
+void connectToWiFi()
+{
+    networkConfRead();
+    unsigned int numNets = configuredNets.size();
+    if (numNets > 0)
+    {
+        for (unsigned int i = 0; i < numNets; i++)
+        {
+            Serial.printf("Connect to %s/%s\n", configuredNets[i].ssid.c_str(), configuredNets[i].psk.c_str());
+            wifimulti.addAP(configuredNets[i].ssid.c_str(), configuredNets[i].psk.c_str());
+        }
+        wifimulti.run();
+    }
+    else
+    {
+        configurator.start();
+    }
 }

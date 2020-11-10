@@ -5,6 +5,7 @@
 #include "lamp.h"
 
 extern Lamp lamp;
+Configurator configurator;
 
 Configurator::Configurator()
 {
@@ -52,7 +53,7 @@ void Configurator::poll()
     if (running)
     {
         unsigned long now = millis();
-        if ((now - startedAt) > (2 * 60 *1000))
+        if ((now - startedAt) > (15 * 60 *1000))
         {
             Serial.println("Configurator timeout");
             stop();

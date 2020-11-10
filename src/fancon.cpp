@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
+
 #include <ESP8266mDNS.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
@@ -16,16 +16,17 @@ const char *compTime = __TIME__;
 #include "infrared.h"
 #include "webserver.h"
 #include "configurator.h"
+#include "networks.h"
 #include "lamp.h"
 #include "fan.h"
 
 WiFiClient wifiClient;
-ESP8266WiFiMulti wifimulti;
+
 PubSubClient mqttClient(wifiClient);
 
 Lamp lamp("light");
 Fan fan("fan");
-Configurator configurator;
+extern Configurator configurator;
 
 bool OTAinit = false;
 
@@ -63,17 +64,14 @@ void initWiFi()
   if ((lastAttempt == 0) || ((now - lastAttempt) > pause))
   {
     wifiattemptcount++;
-    Serial.print("Connecting to WiFi: ");
-    Serial.print(persistant.wifissid);
-    Serial.print("/");
-    Serial.println(persistant.wifipsk);
-
+    // Serial.print("Connecting to WiFi: ");
+    // Serial.print(persistant.wifissid);
+    // Serial.print("/");
+    // Serial.println(persistant.wifipsk);
     // WiFi.begin(persistant.wifissid, persistant.wifipsk);
-    wifimulti.addAP(persistant.wifissid, persistant.wifipsk);
-    wifimulti.addAP("asgard", "enaLkraP");
-    wifimulti.addAP("asgard2", "enaLkraP");
+    // wifimulti.addAP(persistant.wifissid, persistant.wifipsk);
 
-    wifimulti.run();
+    connectToWiFi();
 
     lastAttempt = now;
     MDNS.begin(persistant.controllername);

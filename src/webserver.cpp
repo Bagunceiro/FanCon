@@ -181,13 +181,20 @@ String &listNetworks(String &body, networkList &networks, bool selected)
     const int maxNetLine = 256;
     char buffer[maxNetLine];
     snprintf(buffer, maxNetLine, R"=====(
-<input type=checkbox %s id=%s%i name=%s></input>
-<label for=%s%i>&nbsp;</label>%s <a href="/config.netedit?ssid=%s">%s<br>
+<tr><td><input type=checkbox %s id=%s%d name=%s></input>
+<label for=%s%d>&nbsp;</label><input type=hidden name=ssid value="%s"/></td><td>%s %s%s%s%s%s</td></tr>
 )=====",
-             (selected ? "checked" : ""), selected ? "cf" : "ds", i,
-             "conf", selected ? "cf" : "ds", i,
+             (selected ? "checked" : ""),
+             (selected ? "cf" : "ds"), i,
+             "conf",
+             (selected ? "cf" : "ds"), i,
+             networks[i].ssid.c_str(),
              (networks[i].openNet ? "🔓" : "🔒"),
-             networks[i].ssid.c_str(), networks[i].ssid.c_str());
+             (selected ? "<a href=/config.netedit?ssid=" : ""),
+             (selected ? networks[i].ssid.c_str() : ""),
+             (selected ? ">" : ""),
+             networks[i].ssid.c_str(),
+             (selected ? "</a>" : ""));
     body += buffer;
   }
   return body;
@@ -210,7 +217,7 @@ void handleNetConfig()
     {
       const String argName = server.argName(i);
       const String value = server.arg(i);
-      // Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
+      Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
 
       if (usenext && (argName == "ssid"))
       {
@@ -218,21 +225,9 @@ void handleNetConfig()
         addNetwork(newlist, value);
       }
 
-      if (argName == "conf")
-      {
-        usenext = true;
-      }
-      else
-        usenext = false;
+      if (argName == "conf") usenext = true;
+      else usenext = false;
     }
-    /*
-    networkList tnetworks;
-    WiFiNetworkDef network("asgard_2g", "enaLkraP");
-    tnetworks.push_back(network);
-    WiFiNetworkDef network2("another", "password");
-    tnetworks.push_back(network2);
-    networkConfWrite(tnetworks);
-    */
     networkConfWrite(newlist);
   }
   networkList &cnetworks = networkConfRead();
@@ -241,14 +236,15 @@ void handleNetConfig()
   String body(R"====(<BODY><H1>Controller Network Configuration</H1>
   <FORM method=post action=/config.net><INPUT type=submit value="Update">
   <H2>Configured Networks</H2>
+  <TABLE>
   )====");
 
   listNetworks(body, cnetworks, true);
-  body += "<H2>Discovered Networks</H2>";
+  body += "</TABLE><H2>Discovered Networks</H2><TABLE>";
   networkList &snetworks = scanNetworks();
   std::sort(snetworks.begin(), snetworks.end(), sortByRSSI);
   listNetworks(body, snetworks, false);
-  body += "</FORM></BODY>";
+  body += "</TABLE></FORM></BODY>";
 
   sendPage(head1, title, head2, style, head3, headEnd, body);
 }
@@ -263,10 +259,12 @@ void handleNewNet()
 
     for (uint8_t i = 0; i < server.args(); i++)
     {
-      const String argName = "server.argName(i)";
+      const String argName = server.argName(i);
+      Serial.printf("Arg %s, val %s\n", argName.c_str(), server.arg(i).c_str());
 
       if (argName == "ssid")
       {
+        Serial.printf("SSID is %s\n", server.arg(i).c_str());
         net.ssid = server.arg(i);
       }
       else if (argName == "psk")
@@ -276,7 +274,18 @@ void handleNewNet()
       }
     }
   }
+  Serial.printf("Editted network %s\n", net.ssid.c_str());
   updateWiFiDef(net);
+  String title("WiFi Network");
+  String head3("");
+  char body[512];
+  snprintf(body, 512, R"====(<BODY><H1>Network Edit</H1>
+  Network %s Updated<br>
+  <a href="/config.net">Back to Network Configuration</a>
+  </BODY>
+  )====", net.ssid.c_str());
+
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void handleNetEdit()
@@ -289,17 +298,20 @@ void handleNetEdit()
       ssid = server.arg(i);
       break;
     }
-    String title("WiFi Network");
+  }
+  String title("WiFi Network");
   String head3("");
-  String body(R"====(<BODY><H1>Network Edit</H1>
-  <FORM method=post action=/config.net>
-  SSID: <INPUT type=text value=%s/><br>
-  PSK: <INPUT type=password value=%s/><br>
+  char body[512];
+  snprintf(body, 512, R"====(<BODY><H1>Network Edit</H1>
+  <FORM method=post action=/config.addnet>
+  SSID: <INPUT name=ssid value="%s"/><br>
+  PSK: <INPUT type=password name=psk value=""/><br>
   <INPUT type=submit value="Update">
   </FORM>
   </BODY>
-  )====");
-  }
+  )====", ssid.c_str());
+
+  sendPage(head1, title, head2, style, head3, headEnd, body);
 }
 
 void initWebServer()

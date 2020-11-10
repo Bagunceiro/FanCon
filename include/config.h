@@ -34,9 +34,6 @@ extern const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE;
 
 struct configBlock
 {
-  // uint32_t magicnumber;
-  char wifissid[16];
-  char wifipsk[16];
   char controllername[16];
   char mqtthost[32];
   char mqttport[8];
@@ -45,8 +42,6 @@ struct configBlock
   char mqttroot[16];
   char mqtttopic[16];
 
-  static const char* wifissid_n;
-  static const char* wifipsk_n;
   static const char* controllername_n;
   static const char* mqtthost_n;
   static const char* mqttport_n;
