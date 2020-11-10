@@ -3,6 +3,7 @@
 
 #include "infrared.h"
 
+
 class Configurator : public IRControlled
 {
 public:
@@ -13,9 +14,11 @@ public:
     void stop();
     void poll();
 
+
 private:
     unsigned long startedAt;
     bool running;
+
 };
 
 

@@ -10,26 +10,49 @@ const String style = R"=====(
 function gohome()     {location.assign('/');}
 function gomqttconf() {location.assign('config.mqtt');}
 function gowificonf() {location.assign('config.net');}
+function goreset()    {location.assign('reset');}
 </script>
 <style>
-body {font-family:Arial, Sans-Serif; font-size: 4vw;}
-table {font-family: arial, sans-serif; border-collapse: collapse; width: 100%%;}
+body {font-family:Arial, Sans-Serif; font-size: 4vw; background-color: lavender;}
+table {font-family: arial, sans-serif; border-collapse: collapse; margin-left: 5%%; width: 100%%;}
 th, td, input {font-size: 4vw; border: 1px solid #dddddd;white-space:nowrap; text-align: left; padding: 8px; }
-tr:nth-child(even) { background-color: lightblue;}
-button {font-size: 4vw}
+tr:nth-child(even) { background-color: thistle;}
+button {font-size: 3vw; background: indigo; color: white; }
 input[type=checkbox] {display:none;}
 input[type=checkbox] + label:before {content:"☐  ";}
 input:checked + label:before {content:"☑  ";}
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;}
 </style>
 )=====";
 
 const String head1(R"=====(
-<HEAD><meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<HEAD><meta http-equiv="content-type" charset="UTF-8"
+content="text/html, width=device-width, initial-scale=1">
 <TITLE>
 )=====");
 
 const String head2("</TITLE>");
-const String headEnd("</HEAD>");
+const String headEnd(R"=====(
+</HEAD>
+)=====");
+
+const String body1(R"=====(
+<BODY>
+<div class="header" id="myHeader">
+<button onclick="gohome()">Home</button>
+<button onclick=gomqttconf()>MQTT</button>
+<button onclick=gowificonf()>WiFi</button>
+-)=====");
+
+const String tail("");
 
 void sendPage(const String &s1,
               const String &s2,
@@ -37,9 +60,10 @@ void sendPage(const String &s1,
               const String &s4,
               const String &s5,
               const String &s6,
-              const String &s7)
+              const String &s7,
+              const String &s8)
 {
-  int contentLength = s1.length() + s2.length() + s3.length() + s4.length() + s5.length() + s6.length() + s7.length();
+  int contentLength = s1.length() + s2.length() + s3.length() + s4.length() + s5.length() + s6.length() + s7.length() + s8.length() + tail.length();
 
   server.setContentLength(contentLength);
   server.send(200, "text/html", s1);
@@ -49,22 +73,24 @@ void sendPage(const String &s1,
   server.sendContent(s5);
   server.sendContent(s6);
   server.sendContent(s7);
+  server.sendContent(s8);
+  server.sendContent(tail);
 }
 
 void handleRoot()
 {
   const unsigned int maxPageSize = 1024;
   char buffer[64];
-  char body[maxPageSize];
+  char body2[maxPageSize];
 
   const String title("Controller");
   //const String head3("<script>function gomqttconf() {location.assign('config.mqtt');} function gowificonf() {location.assign('config.net');}</script>");
   const String head3("");
 
-  snprintf(body, maxPageSize, R"=====(
-<BODY>
-<button type=button onclick=gomqttconf()>MQTT</button>
-<button type=button onclick=gowificonf()>WiFi</button>
+  snprintf(body2, maxPageSize, R"=====(
+<button onclick=goreset()>Reset</button>
+</div>
+<div class=content>
 <BR><B>Controller: %s</B>
 <TABLE>
 <TR><TD>Version</TD><TD>%s (%s %s)</TD></TR>
@@ -72,31 +98,41 @@ void handleRoot()
 <TR><TD>Uptime</TD><TD>%s</TD></TR>
 <TR><TD>WiFi SSID</TD><TD>%s</TD></TR>
 </TABLE><BR>
+</DIV>
 </BODY>
-  )=====",
+)=====",
            persistant.controllername,
            version, compTime, compDate,
            WiFi.macAddress().c_str(),
            upTime(buffer),
            WiFi.SSID().c_str());
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 void resetMessage()
 {
   const String title("Controller");
   const String head3 = "<meta http-equiv=\"refresh\" content=\"15;url=/\" />";
-  const int maxBody = 96;
-  char body[maxBody];
-  snprintf(body, maxBody, "<BODY><H1>Controller %s</H1>Resetting, please wait</BODY>", persistant.controllername);
+  const int maxBody = 256;
+  char body2[maxBody];
+  snprintf(body2, maxBody, R"=====(
+  </div>
+  <div class=content>
+  <BODY>
+  <br><br>Controller %s Resetting, please wait
+  </div>
+  </BODY>
+  )=====", persistant.controllername);
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
+  delay(1000);
+  ESP.reset();
 }
 
 void handleMQTTUpdate()
 {
-  resetMessage();
+  // resetMessage();body
   if (server.method() == HTTP_POST)
   {
 
@@ -138,8 +174,8 @@ void handleMQTTUpdate()
     Serial.println("Resetting");
 
     delay(3000);
-    ESP.reset();
-    Serial.println("Done reset");
+    resetMessage();
+    // ESP.reset();
   }
 }
 
@@ -149,14 +185,15 @@ void handleMQTTConfig()
 
   String title("<title>Controller Configuration</title>");
   String head3("");
-  char body[maxPageSize];
+  char body2[maxPageSize];
 
-  snprintf(body, maxPageSize, R"=====(
-<BODY>
-<button onclick="gohome()">Home</button>
+  snprintf(body2, maxPageSize, R"=====(
+<button type=submit form=theform>Save and Reset</button>
+</div>
+<div class=content>
 <BR><B>MQTT Configuration: %s</B>
-<FORM method=post action=/config.update>
-<center><table>
+<FORM id=theform method=post action=/config.update>
+<table>
 <tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text name=%s value=%s></td></tr>
 <tr><td><label for=mqtthost>MQTT Broker:</label></td><td><input type=text name=%s value=%s></td></tr>
 <tr><td><label for=mqttport>MQTT Port:</label></td><td><input type=text name=%s value=%s></td></tr>
@@ -164,9 +201,9 @@ void handleMQTTConfig()
 <tr><td><label for=mqttuser>MQTT Password:</label></td><td><input type=text name=%s value=%s></td></tr>
 <tr><td><label for=mqttroot>MQTT Topic root:</label></td><td><input type=text name=%s value=%s></td></tr>
 <tr><td><label for=mqtttopic>MQTT Topic:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td colspan=2><input type=submit value="Save and Reset"></center></td></tr>
-</table></center>
+</table>
 </FORM>
+</div>
 </BODY>
 )=====",
            persistant.controllername,
@@ -178,7 +215,7 @@ void handleMQTTConfig()
            persistant.mqttroot_n, persistant.mqttroot,
            persistant.mqtttopic_n, persistant.mqtttopic);
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 String &listNetworks(String &body, networkList &networks, bool selected)
@@ -188,8 +225,14 @@ String &listNetworks(String &body, networkList &networks, bool selected)
     const int maxNetLine = 256;
     char buffer[maxNetLine];
     snprintf(buffer, maxNetLine, R"=====(
-<tr><td><input type=checkbox %s id=%s%d name=%s></input>
-<label for=%s%d>&nbsp;</label><input type=hidden name=ssid value="%s"/></td><td>%s %s%s%s%s%s</td></tr>
+<tr>
+<td>
+<input type=checkbox %s id=%s%d name=%s></input>
+<label for=%s%d>&nbsp;</label>
+<input type=hidden name=ssid value="%s"/>
+</td>
+<td>%s %s%s%s%s%s</td>
+</tr>
 )=====",
              (selected ? "checked" : ""),
              (selected ? "cf" : "ds"), i,
@@ -242,27 +285,33 @@ void handleNetConfig()
   networkList &cnetworks = networkConfRead();
   String title("WiFi Networks");
   String head3("");
-  String body(R"====(
-  <BODY>
-  <button onclick="gohome()">Home</button>
-  <H1>WiFi Configuration</H1>
-  <FORM method=post action=/config.net><INPUT type=submit value="Update">
-  <H2>Configured Networks</H2>
-  <TABLE>
-  )====");
+  String body2(String(R"=====(
+<button type=submit form=theform>Update</button>
+</div>
+<div class=content>
+<BR><B>WiFi Configuration: )=====")
+ + String(persistant.controllername)
+ + String(R"=====(</B>
+<FORM id=theform method=post action=/config.net>
+<TABLE>
+<TR><TH colspan=2>Configured Networks</TH></TR>
+)====="));
 
-  listNetworks(body, cnetworks, true);
-  body += R"=====(
-  </TABLE>
-  <H2>Discovered Networks</H2>
-  <TABLE>
-  )=====";
+  listNetworks(body2, cnetworks, true);
+  body2 += R"=====(
+</TABLE>
+<TABLE>
+<TR><TH colspan=2>Discovered Networks</TH></TR>
+)=====";
   networkList &snetworks = scanNetworks();
   std::sort(snetworks.begin(), snetworks.end(), sortByRSSI);
-  listNetworks(body, snetworks, false);
-  body += "</TABLE></FORM></BODY>";
+  listNetworks(body2, snetworks, false);
+  body2 += R"=====(
+  </TABLE></FORM></DIV>
+  </BODY>
+  )=====";
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 void handleNewNet()
@@ -294,18 +343,19 @@ void handleNewNet()
   updateWiFiDef(net);
   String title("WiFi Network");
   String head3("");
-  char body[512];
-  snprintf(body, 512, R"====(
-  <BODY>
-  <button onclick="gohome()">Home</button>
-  <button onclick="gowificonf()">WiFi Configuration</button>
-  <H1>WiFi Network Edit</H1>
-  WiFi Network %s Updated
-  </BODY>
-  )====",
+  char body2[512];
+  snprintf(body2, 512, R"====(
+</div>
+<div class=content>
+<br><B>WiFi Network Edit</B>
+<BR><br>
+%s Updated
+</div>
+</BODY>
+)====",
            net.ssid.c_str());
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 void handleNetEdit()
@@ -321,38 +371,43 @@ void handleNetEdit()
   }
   String title("WiFi Network");
   String head3("");
-  char body[512];
-  snprintf(body, 512, R"====(
-  <BODY>
-  <button onclick="gohome()">Home</button>
-  <button onclick="gowificonf()">WiFi</button>
-  <H1>Network Edit</H1>
-  <FORM method=post action=/config.addnet>
-  SSID: <INPUT name=ssid value="%s"/><br>
-  PSK: <INPUT type=password name=psk value=""/><br>
-  <INPUT type=submit value="Update">
-  </FORM>
-  </BODY>
-  )====",
+  char body2[512];
+  snprintf(body2, 512, R"====(
+<button type=submit form=theform>Update</button>
+</div>
+<div class=content>
+<BR><B>WiFi Network Edit</B>
+<FORM id=theform method=post action=/config.addnet>
+<table>
+<tr>
+<td>SSID:</td>
+<td><INPUT name=ssid value="%s"/></td>
+</tr>
+<tr>
+<td>PSK:</td>
+<td><INPUT type=password name=psk value=""/></td>
+</tr>
+</table>
+</FORM>
+</div>
+</BODY>
+)====",
            ssid.c_str());
 
-  sendPage(head1, title, head2, style, head3, headEnd, body);
+  sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 void initWebServer()
 {
   server.on("/", handleRoot);
-  server.on("/config.mqtt", handleMQTTConfig);
-  server.on("/config.update", handleMQTTUpdate);
-  server.on("/config.net", handleNetConfig);
+  server.on("/config.mqtt",    handleMQTTConfig);
+  server.on("/config.update",  handleMQTTUpdate);
+  server.on("/config.net",     handleNetConfig);
   server.on("/config.netedit", handleNetEdit);
-  server.on("/config.addnet", handleNewNet);
-  Serial.println("Web Server☑");
+  server.on("/config.addnet",  handleNewNet);
+  server.on("/reset",          resetMessage);
 
-  //  String mac = WiFi.macAddress();
-  // char ssid[24];
-  //  sprintf(ssid, "c_%c%c%c%c%c%c", mac[9], mac[10], mac[12], mac[13], mac[15], mac[16]);
-  //  Serial.print("SSID = "); Serial.println(ssid);
+  Serial.println("Web Server");
   server.begin();
 }
 

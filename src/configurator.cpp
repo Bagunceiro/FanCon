@@ -3,7 +3,9 @@
 #include "config.h"
 #include "configurator.h"
 #include "lamp.h"
+#include "fan.h"
 
+extern Fan fan;
 extern Lamp lamp;
 Configurator configurator;
 
@@ -15,22 +17,59 @@ Configurator::Configurator()
 
 Configurator::~Configurator()
 {
-
 }
 
 void Configurator::irmsgRecd(uint32_t code)
 {
-  if (code == IRREMOTE_CONFIGURATOR_START) start();
-  if (code == IRREMOTE_CONFIGURATOR_STOP) stop();
+
+    /*
+    Configurator entry uses the fan speed up keys on the remote. but ony when the fan is off.
+    The button must be pressed numberOfPresses times with a delay of no more than keyPressDelay
+    */
+
+    const int numberOfPresses = 5;
+    const unsigned int keyPressDelay = 2000;
+
+    static int state = 0;
+    static unsigned long stateChange = 0;
+    unsigned long now = millis();
+
+
+    if ((stateChange == 0) || ((now - stateChange) < keyPressDelay))
+    {
+        stateChange = now;
+
+
+        if (fan.getSpeed() == 0)
+        {
+            if (code == IRREMOTE_CONFIGURATOR_START)
+            {
+                state++;
+                if (state >= numberOfPresses)
+                {
+                    state = 0;
+                    start();
+                }
+            }
+
+            if (code == IRREMOTE_CONFIGURATOR_STOP)
+                stop();
+        }
+    }
+    else
+    {
+        state = 0;
+    }
+    
 }
 
 void Configurator::start()
 {
     char ssid[24];
-    const char* password = "configure";
+    const char *password = "configure";
     sprintf(ssid, "conf_%s", persistant.controllername);
-    
-    WiFi.softAP(ssid, password);             // Start the access point
+
+    WiFi.softAP(ssid, password); // Start the access point
     Serial.printf("Access Point %s/%s started", ssid, password);
 
     Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
@@ -53,11 +92,10 @@ void Configurator::poll()
     if (running)
     {
         unsigned long now = millis();
-        if ((now - startedAt) > (15 * 60 *1000))
+        if ((now - startedAt) > (15 * 60 * 1000))
         {
             Serial.println("Configurator timeout");
             stop();
         }
     }
 }
-

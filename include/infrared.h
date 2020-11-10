@@ -47,8 +47,8 @@ const uint32_t IRREMOTE_LIGHT_UP    = 0xff906f;
 const uint32_t IRREMOTE_LIGHT_DOWN  = 0xff38c7;
 const uint32_t IRREMOTE_LIGHT_TIMER = 0xffa05f;
 
-const uint32_t IRREMOTE_CONFIGURATOR_START = 0x000011;
-const uint32_t IRREMOTE_CONFIGURATOR_STOP = 0x000022;
+const uint32_t IRREMOTE_CONFIGURATOR_START = IRREMOTE_FAN_FASTER;
+const uint32_t IRREMOTE_CONFIGURATOR_STOP  = IRREMOTE_FAN_SLOWER;
 
 extern const int IRDEBOUNCE; // Number of milliseconds to leave fallow between IR messages
 
