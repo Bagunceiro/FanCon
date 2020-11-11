@@ -132,7 +132,6 @@ void resetMessage()
 
 void handleMQTTUpdate()
 {
-  // resetMessage();body
   if (server.method() == HTTP_POST)
   {
 
@@ -170,12 +169,10 @@ void handleMQTTUpdate()
     }
     persistant.dump();
     persistant.writeFile();
-    // handleConfig();
     Serial.println("Resetting");
 
     delay(3000);
     resetMessage();
-    // ESP.reset();
   }
 }
 
@@ -267,7 +264,6 @@ void handleNetConfig()
     {
       const String argName = server.argName(i);
       const String value = server.arg(i);
-      // Serial.printf("input is %s:%s\n", argName.c_str(), value.c_str());
 
       if (usenext && (argName == "ssid"))
       {

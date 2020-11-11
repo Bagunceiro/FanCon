@@ -110,11 +110,17 @@ void setup()
   initWebServer();
 }
 
+bool wifiConnected = false;
+
 void loop()
 {
-
   if (WiFi.status() == WL_CONNECTED)
   {
+    if (!wifiConnected)
+    {
+      Serial.println("WiFi connected");
+        wifiConnected = true;
+    }
     wifiattemptcount = 0;
     if (mqttClient.connected())
     {
@@ -133,6 +139,11 @@ void loop()
   }
   else
   {
+    if (wifiConnected)
+    {
+      Serial.println("WiFi connection lost");
+      wifiConnected = false;
+    }
     OTAinit = false;
     initWiFi();
   }
@@ -140,14 +151,4 @@ void loop()
   ArduinoOTA.handle();
   server.handleClient();
   configurator.poll();
-
-  /*
-  static bool doneCFG = false;
-  if ((millis() > 30000) && !doneCFG)
-  {
-    Serial.println("Configurator test");
-    doneCFG = true;
-    configurator.start();
-  }
-  */
 }
