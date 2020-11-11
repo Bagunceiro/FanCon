@@ -124,7 +124,7 @@ void initMQTT()
   static unsigned long lastAttempt = 0;
   unsigned long now = millis();
 
-  if ((strlen(persistant.mqtthost) == 0) || (strlen(persistant.mqttport) == 0)) return;
+  if ((persistant.mqtthost.length() == 0) || (persistant.mqttport.length()) == 0) return;
 
   MqttControlled::setAllPrefixes();
 
@@ -139,10 +139,10 @@ void initMQTT()
 
     String clientID = String("ctlr_") + String(persistant.controllername) + String("_") + String(millis() % 1000);
 
-    mqttClient.setServer(persistant.mqtthost, atol(persistant.mqttport));
+    mqttClient.setServer(persistant.mqtthost.c_str(), persistant.mqttport.toInt());
     mqttClient.setCallback(messageReceived);
 
-    if (mqttClient.connect(clientID.c_str(), persistant.mqttuser, persistant.mqttpwd)) {
+    if (mqttClient.connect(clientID.c_str(), persistant.mqttuser.c_str(), persistant.mqttpwd.c_str())) {
 
       Serial.println("MQTT connected");
       MqttControlled::doAllSubscriptions(mqttClient);

@@ -6,7 +6,7 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
-const char *version = "FanCon 1.1.0";
+const char *version = "FanCon 2.0.0";
 const char *compDate = __DATE__;
 const char *compTime = __TIME__;
 
@@ -32,7 +32,7 @@ bool OTAinit = false;
 
 void initOTA()
 {
-  ArduinoOTA.setHostname(persistant.controllername);
+  ArduinoOTA.setHostname(persistant.controllername.c_str());
   ArduinoOTA.onStart([]() { // Enter safe state for the upgrade
     lamp.sw(0);
     fan.setSpeed(0);

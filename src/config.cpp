@@ -120,13 +120,14 @@ bool configBlock::readFile()
   }
   // Serial.println("Read Config -");
 
-  strlcpy(controllername, doc[controllername_n] | "FanCon", sizeof(controllername));
-  strlcpy(mqtthost,       doc[mqtthost_n] | "",             sizeof(mqtthost));
-  strlcpy(mqttport,       doc[mqttport_n] | "",             sizeof(mqttport));
-  strlcpy(mqttuser,       doc[mqttuser_n] | "",             sizeof(mqttuser));
-  strlcpy(mqttpwd,        doc[mqttpwd_n]  | "",             sizeof(mqttpwd));
-  strlcpy(mqttroot,       doc[mqttroot_n] | "",             sizeof(mqttroot));
-  strlcpy(mqtttopic,      doc[mqtttopic_n] | "",            sizeof(mqtttopic));
+  controllername = doc[controllername_n] | "FanCon";
+  mqtthost       = doc[mqtthost_n]       | "";
+  mqttport       = doc[mqttport_n]       | "";
+  mqttuser       = doc[mqttuser_n]       | "";
+  mqttpwd        = doc[mqttpwd_n]        | "";
+  mqttroot       = doc[mqttroot_n]       | "";
+  mqtttopic      = doc[mqtttopic_n]      | "";
+
   // Close the file (Curiously, File's destructor doesn't close the file)
   
   configFile.close();

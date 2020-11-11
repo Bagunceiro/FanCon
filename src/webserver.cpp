@@ -5,12 +5,20 @@
 
 ESP8266WebServer server(80);
 
+const String pageRoot       = "/";
+const String pageMQTT       = "/config.mqtt";
+const String pageMQTTUpdate = "/config.update";
+const String pageWiFi       = "/config.net";
+const String pageWiFiNet    = "/config.netedit";
+const String pageWiFiNetAdd = "/config.addnet";
+const String pageReset      = "/reset";
+
 const String style = R"=====(
 <script>
-function gohome()     {location.assign('/');}
-function gomqttconf() {location.assign('config.mqtt');}
-function gowificonf() {location.assign('config.net');}
-function goreset()    {location.assign('reset');}
+function gohome()     {location.assign(")=====" + pageRoot + R"=====(");}
+function gomqttconf() {location.assign(")=====" + pageMQTT + R"=====(");}
+function gowificonf() {location.assign(")=====" + pageWiFi + R"=====(");}
+function goreset()    {location.assign(")=====" + pageReset + R"=====(");}
 </script>
 <style>
 body {font-family:Arial, Sans-Serif; font-size: 4vw; background-color: lavender;}
@@ -101,7 +109,7 @@ void handleRoot()
 </DIV>
 </BODY>
 )=====",
-           persistant.controllername,
+           persistant.controllername.c_str(),
            version, compTime, compDate,
            WiFi.macAddress().c_str(),
            upTime(buffer),
@@ -123,7 +131,8 @@ void resetMessage()
   <br><br>Controller %s Resetting, please wait
   </div>
   </BODY>
-  )=====", persistant.controllername);
+  )=====",
+           persistant.controllername.c_str());
 
   sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
   delay(1000);
@@ -140,31 +149,31 @@ void handleMQTTUpdate()
       const String argName = server.argName(i);
       if (argName == persistant.controllername_n)
       {
-        snprintf(persistant.controllername, sizeof(persistant.controllername), server.arg(i).c_str());
+        persistant.controllername = server.arg(i);
       }
       else if (argName == persistant.mqtthost_n)
       {
-        snprintf(persistant.mqtthost, sizeof(persistant.mqtthost), server.arg(i).c_str());
+        persistant.mqtthost = server.arg(i);
       }
       else if (argName == persistant.mqttport_n)
       {
-        snprintf(persistant.mqttport, sizeof(persistant.mqttport), server.arg(i).c_str());
+        persistant.mqttport = server.arg(i);
       }
       else if (argName == persistant.mqttuser_n)
       {
-        snprintf(persistant.mqttuser, sizeof(persistant.mqttuser), server.arg(i).c_str());
+        persistant.mqttuser = server.arg(i);
       }
       else if (argName == persistant.mqttpwd_n)
       {
-        snprintf(persistant.mqttpwd, sizeof(persistant.mqttpwd), server.arg(i).c_str());
+        persistant.mqttpwd = server.arg(i);
       }
       else if (argName == persistant.mqttroot_n)
       {
-        snprintf(persistant.mqttroot, sizeof(persistant.mqttroot), server.arg(i).c_str());
+        persistant.mqttroot = server.arg(i);
       }
       else if (argName == persistant.mqtttopic_n)
       {
-        snprintf(persistant.mqtttopic, sizeof(persistant.mqtttopic), server.arg(i).c_str());
+        persistant.mqtttopic = server.arg(i);
       }
     }
     persistant.dump();
@@ -178,39 +187,34 @@ void handleMQTTUpdate()
 
 void handleMQTTConfig()
 {
-  const int maxPageSize = 2048;
-
   String title("<title>Controller Configuration</title>");
   String head3("");
-  char body2[maxPageSize];
-
-  snprintf(body2, maxPageSize, R"=====(
+  String body2((String)R"=====(
 <button type=submit form=theform>Save and Reset</button>
 </div>
 <div class=content>
-<BR><B>MQTT Configuration: %s</B>
-<FORM id=theform method=post action=/config.update>
+<BR><B>MQTT Configuration: )=====" + persistant.controllername + R"=====(</B>
+<FORM id=theform method=post action=")=====" + pageMQTTUpdate + R"=====(")>
 <table>
-<tr><td><label for=ctlrname>Controller Name:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqtthost>MQTT Broker:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqttport>MQTT Port:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqttuser>MQTT User:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqttuser>MQTT Password:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqttroot>MQTT Topic root:</label></td><td><input type=text name=%s value=%s></td></tr>
-<tr><td><label for=mqtttopic>MQTT Topic:</label></td><td><input type=text name=%s value=%s></td></tr>
+<tr><td><label for=ctlrname>Controller Name:</label></td>
+<td><input type=text name=")=====" + persistant.controllername_n + R"!(" value=")!" +  persistant.controllername + R"=====("></td></tr>
+<tr><td><label for=mqtthost>MQTT Broker:</label></td>
+<td><input type=text name=")=====" + persistant.mqtthost_n + R"!(" value=")!" + persistant.mqtthost + R"=====("></td></tr>
+<tr><td><label for=mqttport>MQTT Port:</label></td>
+<td><input type=text name=")=====" + persistant.mqttport_n + R"!(" value=")!" + persistant.mqttport + R"=====("></td></tr>
+<tr><td><label for=mqttuser>MQTT User:</label></td>
+<td><input type=text name=")=====" + persistant.mqttuser_n + R"!(" value=")!" + persistant.mqttuser + R"=====("></td></tr>
+<tr><td><label for=mqttuser>MQTT Password:</label></td>
+<td><input type=text name=")=====" + persistant.mqttpwd_n + R"!(" value=")!" + persistant.mqttpwd + R"=====("></td></tr>
+<tr><td><label for=mqttroot>MQTT Topic root:</label></td>
+<td><input type=text name=")=====" + persistant.mqttroot_n + R"!(" value=")!" + persistant.mqttroot + R"=====("></td></tr>
+<tr><td><label for=mqtttopic>MQTT Topic:</label></td>
+<td><input type=text name=")=====" + persistant.mqtttopic_n + R"!(" value=")!" + persistant.mqtttopic + R"=====("></td></tr>
 </table>
 </FORM>
 </div>
 </BODY>
-)=====",
-           persistant.controllername,
-           persistant.controllername_n, persistant.controllername,
-           persistant.mqtthost_n, persistant.mqtthost,
-           persistant.mqttport_n, persistant.mqttport,
-           persistant.mqttuser_n, persistant.mqttuser,
-           persistant.mqttpwd_n, persistant.mqttpwd,
-           persistant.mqttroot_n, persistant.mqttroot,
-           persistant.mqtttopic_n, persistant.mqtttopic);
+)=====");
 
   sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
@@ -219,6 +223,22 @@ String &listNetworks(String &body, networkList &networks, bool selected)
 {
   for (unsigned int i = 0; i < networks.size(); i++)
   {
+    body +=  String(R"=====(
+<tr>
+<td>
+<input type=checkbox)=====") + String(selected ? " checked" : "") + String(" id=") + String(selected ? "cf" : "ds") + String(i) + String(R"=====( name=%s></input>
+<label for=)=====") + String(selected ? "cf" : "ds") + i + String(R"=====()>&nbsp;</label>
+<input type=hidden name=ssid value="%s"/>
+</td>
+<td>)=====") + String(networks[i].openNet ? "🔓" : "🔒")
+            + (selected ? (String(" <a href=\"") + pageWiFiNet + "?ssid=" + networks[i].ssid + "\">") : "")
+            + networks[i].ssid
+            + String(selected ? "</a>" : "")
+            + String(R"=====(
+</td>
+</tr>
+)=====");
+    /*
     const int maxNetLine = 256;
     char buffer[maxNetLine];
     snprintf(buffer, maxNetLine, R"=====(
@@ -228,7 +248,7 @@ String &listNetworks(String &body, networkList &networks, bool selected)
 <label for=%s%d>&nbsp;</label>
 <input type=hidden name=ssid value="%s"/>
 </td>
-<td>%s %s%s%s%s%s</td>
+<td>%s %s%s%s</td>
 </tr>
 )=====",
              (selected ? "checked" : ""),
@@ -237,12 +257,11 @@ String &listNetworks(String &body, networkList &networks, bool selected)
              (selected ? "cf" : "ds"), i,
              networks[i].ssid.c_str(),
              (networks[i].openNet ? "🔓" : "🔒"),
-             (selected ? "<a href=/config.netedit?ssid=" : ""),
-             (selected ? networks[i].ssid.c_str() : ""),
-             (selected ? ">" : ""),
+             (selected ? (String("<a href=\"") + pageWiFiNet + "?ssid=" + networks[i].ssid + "\">").c_str() : ""),
              networks[i].ssid.c_str(),
              (selected ? "</a>" : ""));
     body += buffer;
+    */
   }
   return body;
 }
@@ -285,9 +304,8 @@ void handleNetConfig()
 <button type=submit form=theform>Update</button>
 </div>
 <div class=content>
-<BR><B>WiFi Configuration: )=====")
- + String(persistant.controllername)
- + String(R"=====(</B>
+<BR><B>WiFi Configuration: )=====") +
+               String(persistant.controllername) + String(R"=====(</B>
 <FORM id=theform method=post action=/config.net>
 <TABLE>
 <TR><TH colspan=2>Configured Networks</TH></TR>
@@ -367,17 +385,17 @@ void handleNetEdit()
   }
   String title("WiFi Network");
   String head3("");
-  char body2[512];
-  snprintf(body2, 512, R"====(
+  String body2;
+  body2 = (String)R"=====(
 <button type=submit form=theform>Update</button>
 </div>
 <div class=content>
-<BR><B>WiFi Network Edit</B>
-<FORM id=theform method=post action=/config.addnet>
+<BR><B>WiFi Network Edit: ")=====" + persistant.controllername + R"=====("</B>
+<FORM id=theform method=post action=)=====" + pageWiFiNetAdd + R"=====(>
 <table>
 <tr>
 <td>SSID:</td>
-<td><INPUT name=ssid value="%s"/></td>
+<td><INPUT name=ssid value=")=====" + ssid + R"====("/></td>
 </tr>
 <tr>
 <td>PSK:</td>
@@ -387,21 +405,21 @@ void handleNetEdit()
 </FORM>
 </div>
 </BODY>
-)====",
-           ssid.c_str());
+)====";
+
 
   sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
 void initWebServer()
 {
-  server.on("/", handleRoot);
-  server.on("/config.mqtt",    handleMQTTConfig);
-  server.on("/config.update",  handleMQTTUpdate);
-  server.on("/config.net",     handleNetConfig);
-  server.on("/config.netedit", handleNetEdit);
-  server.on("/config.addnet",  handleNewNet);
-  server.on("/reset",          resetMessage);
+  server.on(pageRoot,       handleRoot);
+  server.on(pageMQTT,       handleMQTTConfig);
+  server.on(pageMQTTUpdate, handleMQTTUpdate);
+  server.on(pageWiFi,       handleNetConfig);
+  server.on(pageWiFiNet,    handleNetEdit);
+  server.on(pageWiFiNetAdd, handleNewNet);
+  server.on(pageReset,      resetMessage);
 
   Serial.println("Web Server");
   server.begin();

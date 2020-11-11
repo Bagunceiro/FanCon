@@ -34,13 +34,13 @@ extern const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE;
 
 struct configBlock
 {
-  char controllername[16];
-  char mqtthost[32];
-  char mqttport[8];
-  char mqttuser[16];
-  char mqttpwd[16];
-  char mqttroot[16];
-  char mqtttopic[16];
+  String controllername;
+  String mqtthost;
+  String mqttport;
+  String mqttuser;
+  String mqttpwd;
+  String mqttroot;
+  String mqtttopic;
 
   static const char* controllername_n;
   static const char* mqtthost_n;
