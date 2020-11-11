@@ -59,8 +59,7 @@ struct configBlock
 
 extern configBlock persistant;
 
-char* upTime(char* buffer);
-
+String upTime();
 void report();
 
 #endif

@@ -34,7 +34,7 @@ const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE = 15000;
 
 configBlock persistant;
 
-char* upTime(char* buffer)
+String upTime()
 {
   time_t now = millis();
   int days = now / (1000 * 60 * 60 * 24);
@@ -42,17 +42,17 @@ char* upTime(char* buffer)
   int mins = (now % (1000 * 60 * 60)) / (1000 * 60);
   int secs = (now % (1000 * 60)) / 1000;
   int millisecs = now % 1000;
-  sprintf(buffer, "%d:%d:%d:%d.%03d", days, hours, mins, secs, millisecs);
-  return buffer;
+  char ms[4];
+  sprintf(ms, "%03d", millisecs);
+  return String(days)+" days "+String(hours)+":"+String(mins)+":"+String(secs)+"." + String(ms); 
 }
 
 void report()
 {
-  char buffer[64];
   Serial.print("Report for ");   Serial.println(persistant.controllername);
   Serial.print("MAC Address: "); Serial.println(WiFi.macAddress());
   Serial.print("IP address: ");  Serial.println(WiFi.localIP());
-  Serial.print("Up time: ");     Serial.println(upTime(buffer));
+  Serial.print("Up time: ");     Serial.println(upTime());
 }
 
 void configBlock::dump()
