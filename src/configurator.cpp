@@ -65,12 +65,15 @@ void Configurator::irmsgRecd(uint32_t code)
 
 void Configurator::start()
 {
-    char ssid[24];
+    String m = WiFi.macAddress();
+    String ssid = persistant.controllername + m.substring(9,11) + m.substring(12,14) + m.substring(15);
+    // char ssid[24];
     const char *password = "configure";
-    sprintf(ssid, "conf_%s", persistant.controllername);
+    // sprintf(ssid, "conf_%s", persistant.controllername);
+    Serial.printf("SoftAP SSID will be %s\n", ssid.c_str());
 
     WiFi.softAP(ssid, password); // Start the access point
-    Serial.printf("Access Point %s/%s started", ssid, password);
+    Serial.printf("Access Point %s/%s started", ssid.c_str(), password);
 
     Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
