@@ -13,6 +13,7 @@ Configurator::Configurator()
 {
     startedAt = 0;
     running = false;
+    startRequest = false;
 }
 
 Configurator::~Configurator()
@@ -21,7 +22,6 @@ Configurator::~Configurator()
 
 void Configurator::irmsgRecd(uint32_t code)
 {
-
     /*
     Configurator entry uses the fan speed up keys on the remote. but ony when the fan is off.
     The button must be pressed numberOfPresses times with a delay of no more than keyPressDelay
@@ -34,21 +34,20 @@ void Configurator::irmsgRecd(uint32_t code)
     static unsigned long stateChange = 0;
     unsigned long now = millis();
 
-
     if ((stateChange == 0) || ((now - stateChange) < keyPressDelay))
     {
         stateChange = now;
-
 
         if (fan.getSpeed() == 0)
         {
             if (code == IRREMOTE_CONFIGURATOR_START)
             {
                 state++;
+                Serial.printf("Configurator state = %d\n", state);
                 if (state >= numberOfPresses)
                 {
                     state = 0;
-                    start();
+                    startRequest = true; // done like this to avoid too much happening in the interrupt
                 }
             }
 
@@ -59,27 +58,25 @@ void Configurator::irmsgRecd(uint32_t code)
     else
     {
         state = 0;
+        stateChange = 0;
     }
-    
 }
 
 void Configurator::start()
 {
     String m = WiFi.macAddress();
-    String ssid = persistant.controllername + m.substring(9,11) + m.substring(12,14) + m.substring(15);
+    String ssid = persistant.controllername + m.substring(9, 11) + m.substring(12, 14) + m.substring(15);
     // char ssid[24];
     const char *password = "configure";
-    // sprintf(ssid, "conf_%s", persistant.controllername);
-    Serial.printf("SoftAP SSID will be %s\n", ssid.c_str());
 
     WiFi.softAP(ssid, password); // Start the access point
-    Serial.printf("Access Point %s/%s started", ssid.c_str(), password);
+    Serial.printf("Access Point %s/%s started\n", ssid.c_str(), password);
 
     Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
     for (int i = 0; i < 5; i++)
     {
-        delay(lamp.blip(500));
+        delay(lamp.blip(1000));
     }
     startedAt = millis();
     running = true;
@@ -92,6 +89,11 @@ void Configurator::stop()
 
 void Configurator::poll()
 {
+    if (startRequest)
+    {
+        startRequest = false;
+        start();
+    }
     if (running)
     {
         unsigned long now = millis();

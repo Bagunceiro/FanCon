@@ -14,11 +14,10 @@ public:
     void stop();
     void poll();
 
-
 private:
     unsigned long startedAt;
     bool running;
-
+    bool startRequest;
 };
 
 

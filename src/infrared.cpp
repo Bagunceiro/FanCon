@@ -63,8 +63,8 @@ void pollIR()
     static unsigned long then = 0;
     unsigned long  when;
     uint64_t val = IRDecodeResults.value;
-    serialPrintUint64(val, HEX);
-    Serial.println("");
+    // serialPrintUint64(val, HEX);
+    // Serial.println("");
 
     if ((when = irDebounce(then)))
     {
