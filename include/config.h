@@ -2,10 +2,13 @@
 #define CONFIG_H
 
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
 // #include <EEPROM.h>
+#include <NTPClient.h>
 
 extern const char* SSID;
 extern const char* PSK;
+
 
 #define MQTT_TPC_STAT  "status"
 #define MQTT_TPC_SPEED "speed"
@@ -28,6 +31,8 @@ extern const int IR_DETECTOR_PIN;
 extern const unsigned int MQTT_CONNECT_ATTEMPT_PAUSE; // Delay between attempts to reconnect MQTT (ms)
 extern const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE;
 
+const int TZ = -3;
+extern NTPClient timeClient;
 
 
 // #define MAGIC 0xc0ffee

@@ -1,7 +1,14 @@
-#include "config.h"
+
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <WiFiUdp.h>
+
+#include "config.h"
+
+WiFiUDP udp;
+
+NTPClient timeClient(udp, TZ * 60 * 60);
 
    const char* configBlock::controllername_n = "controllername";
    const char* configBlock::mqtthost_n       = "mqtthost";

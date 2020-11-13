@@ -1,7 +1,5 @@
 #include <Arduino.h>
-
 #include <ESP8266WiFi.h>
-
 #include <ESP8266mDNS.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
@@ -19,6 +17,8 @@ const char *compTime = __TIME__;
 #include "networks.h"
 #include "lamp.h"
 #include "fan.h"
+
+
 
 WiFiClient wifiClient;
 
@@ -111,6 +111,7 @@ void setup()
 }
 
 bool wifiConnected = false;
+bool ntpstarted = false;
 
 void loop()
 {
@@ -119,7 +120,7 @@ void loop()
     if (!wifiConnected)
     {
       Serial.println("WiFi connected");
-        wifiConnected = true;
+      wifiConnected = true;
     }
     wifiattemptcount = 0;
     if (mqttClient.connected())
@@ -134,6 +135,13 @@ void loop()
     if (OTAinit == false)
     {
       initOTA();
+    }
+    if (!ntpstarted)
+    {
+      timeClient.begin();
+      ntpstarted = true;
+      timeClient.update();
+      timeClient.setTimeOffset(TZ * 60 * 60);
     }
     MDNS.update();
   }
@@ -151,4 +159,15 @@ void loop()
   ArduinoOTA.handle();
   server.handleClient();
   configurator.poll();
+
+  /*
+  static unsigned long timecheck = 0;
+  unsigned long now = millis();
+
+  if (ntpstarted && ((now - timecheck) > 2000))
+  {
+    Serial.println(timeClient.getFormattedTime());
+    timecheck = now;
+  }
+  */
 }
