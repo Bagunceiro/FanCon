@@ -14,6 +14,8 @@ Configurator::Configurator()
     startedAt = 0;
     running = false;
     startRequest = false;
+    startCodeState = 0;
+    stateChangedAt = 0;
 }
 
 Configurator::~Configurator()
@@ -30,35 +32,37 @@ void Configurator::irmsgRecd(uint32_t code)
     const int numberOfPresses = 5;
     const unsigned int keyPressDelay = 2000;
 
-    static int state = 0;
-    static unsigned long stateChange = 0;
     unsigned long now = millis();
 
-    if ((stateChange == 0) || ((now - stateChange) < keyPressDelay))
+    if (running)
     {
-        stateChange = now;
+        if (code == IRREMOTE_CONFIGURATOR_STOP)
+            stop();
+    }
+    else if ((stateChangedAt == 0) || ((now - stateChangedAt) < keyPressDelay))
+    {
+        stateChangedAt = now;
 
         if (fan.getSpeed() == 0)
         {
             if (code == IRREMOTE_CONFIGURATOR_START)
             {
-                state++;
-                Serial.printf("Configurator state = %d\n", state);
-                if (state >= numberOfPresses)
+                startCodeState++;
+                Serial.printf("Configurator state = %d\n", startCodeState);
+                if (startCodeState >= numberOfPresses)
                 {
-                    state = 0;
+                    // state = 0;
+                    running = true; // Here as well to avoid interupt bypassing it
+                    stateChangedAt = 0;
                     startRequest = true; // done like this to avoid too much happening in the interrupt
                 }
             }
-
-            if (code == IRREMOTE_CONFIGURATOR_STOP)
-                stop();
         }
     }
     else
     {
-        state = 0;
-        stateChange = 0;
+        startCodeState = 0;
+        stateChangedAt = 0;
     }
 }
 
@@ -84,7 +88,13 @@ void Configurator::start()
 
 void Configurator::stop()
 {
-    ESP.reset();
+
+    WiFi.softAPdisconnect(true);
+    running = false;
+    startCodeState = 0;
+    stateChangedAt = 0;
+    Serial.println("SoftAP stopped");
+    // ESP.reset();
 }
 
 void Configurator::poll()

@@ -18,6 +18,8 @@ private:
     unsigned long startedAt;
     bool running;
     bool startRequest;
+    unsigned int startCodeState;
+    unsigned long stateChangedAt;
 };
 
 
