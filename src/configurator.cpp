@@ -68,22 +68,24 @@ void Configurator::irmsgRecd(uint32_t code)
 
 void Configurator::start()
 {
-    String m = WiFi.macAddress();
-    String ssid = persistant.controllername + m.substring(9, 11) + m.substring(12, 14) + m.substring(15);
-    // char ssid[24];
-    const char *password = "configure";
-
-    WiFi.softAP(ssid, password); // Start the access point
-    Serial.printf("Access Point %s/%s started\n", ssid.c_str(), password);
-
-    Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
-
-    for (int i = 0; i < 5; i++)
+    if (!running)
     {
-        delay(lamp.blip(1000));
+        String m = WiFi.macAddress();
+        String ssid = persistant.controllername + "_" + m.substring(9, 11) + m.substring(12, 14) + m.substring(15);
+        const char *password = "configure";
+
+        WiFi.softAP(ssid, password); // Start the access point
+        Serial.printf("Access Point %s/%s started\n", ssid.c_str(), password);
+
+        Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
+
+        for (int i = 0; i < 5; i++)
+        {
+            delay(lamp.blip(1000));
+        }
+        startedAt = millis();
+        running = true;
     }
-    startedAt = millis();
-    running = true;
 }
 
 void Configurator::stop()

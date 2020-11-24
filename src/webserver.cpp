@@ -2,12 +2,13 @@
 #include "config.h"
 #include "webserver.h"
 #include "networks.h"
+#include "WiFiSerial.h"
 
 ESP8266WebServer server(80);
 
 const String pageRoot = "/";
-const String pageMQTT = "/config.mqtt";
-const String pageMQTTUpdate = "/config.update";
+const String pageGen = "/config.gen";
+const String pageGenUpdate = "/config.update";
 const String pageWiFi = "/config.net";
 const String pageWiFiNet = "/config.netedit";
 const String pageWiFiNetAdd = "/config.addnet";
@@ -17,8 +18,8 @@ const String style = R"=====(
 <script>
 function gohome()     {location.assign(")=====" +
                      pageRoot + R"=====(");}
-function gomqttconf() {location.assign(")=====" +
-                     pageMQTT + R"=====(");}
+function gogenconf() {location.assign(")=====" +
+                     pageGen + R"=====(");}
 function gowificonf() {location.assign(")=====" +
                      pageWiFi + R"=====(");}
 function goreset()    {location.assign(")=====" +
@@ -60,7 +61,7 @@ const String body1(R"=====(
 <BODY>
 <div class="header" id="myHeader">
 <button onclick="gohome()">Home</button>
-<button onclick=gomqttconf()>MQTT</button>
+<button onclick=gogenconf()>General</button>
 <button onclick=gowificonf()>WiFi</button>
 -)=====");
 
@@ -130,7 +131,7 @@ void resetMessage()
   ESP.reset();
 }
 
-void handleMQTTUpdate()
+void handleGenUpdate()
 {
   if (server.method() == HTTP_POST)
   {
@@ -166,6 +167,15 @@ void handleMQTTUpdate()
       {
         persistant.mqtttopic = server.arg(i);
       }
+      else if (argName == persistant.updateServer_n)
+      {
+        persistant.updateServer = server.arg(i);
+      }
+      else if (argName == persistant.updateInterval_n)
+      {
+        persistant.updateInterval = server.arg(i);
+      }
+
     }
     persistant.dump();
     persistant.writeFile();
@@ -176,7 +186,7 @@ void handleMQTTUpdate()
   }
 }
 
-void handleMQTTConfig()
+void handleGenConfig()
 {
   String title("<title>Controller Configuration</title>");
   String head3("");
@@ -184,10 +194,10 @@ void handleMQTTConfig()
 <button type=submit form=theform>Save and Reset</button>
 </div>
 <div class=content>
-<BR><B>MQTT Configuration: )=====" +
+<BR><B>General Configuration: )=====" +
                persistant.controllername + R"=====(</B>
 <FORM id=theform method=post action=")=====" +
-               pageMQTTUpdate + R"=====(")>
+               pageGenUpdate + R"=====(")>
 <table>
 <tr><td><label for=ctlrname>Controller Name:</label></td>
 <td><input type=text name=")=====" +
@@ -210,6 +220,12 @@ void handleMQTTConfig()
 <tr><td><label for=mqtttopic>MQTT Topic:</label></td>
 <td><input type=text name=")=====" +
                persistant.mqtttopic_n + R"!(" value=")!" + persistant.mqtttopic + R"=====("></td></tr>
+<tr><td><label for=mqtttopic>Update URL:</label></td>
+<td><input type=text name=")=====" +
+               persistant.updateServer_n + R"!(" value=")!" + persistant.updateServer + R"=====("></td></tr>
+<tr><td><label for=mqtttopic>Update Check Interval:</label></td>
+<td><input type=text name=")=====" +
+               persistant.updateInterval_n + R"!(" value=")!" + persistant.updateInterval + R"=====("></td></tr>
 </table>
 </FORM>
 </div>
@@ -390,8 +406,8 @@ void handleNetEdit()
 void initWebServer()
 {
   server.on(pageRoot, handleRoot);
-  server.on(pageMQTT, handleMQTTConfig);
-  server.on(pageMQTTUpdate, handleMQTTUpdate);
+  server.on(pageGen, handleGenConfig);
+  server.on(pageGenUpdate, handleGenUpdate);
   server.on(pageWiFi, handleNetConfig);
   server.on(pageWiFiNet, handleNetEdit);
   server.on(pageWiFiNetAdd, handleNewNet);

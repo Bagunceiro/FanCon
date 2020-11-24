@@ -46,6 +46,8 @@ struct configBlock
   String mqttpwd;
   String mqttroot;
   String mqtttopic;
+  String updateInterval;
+  String updateServer;
 
   static const char* controllername_n;
   static const char* mqtthost_n;
@@ -54,6 +56,8 @@ struct configBlock
   static const char* mqttpwd_n;
   static const char* mqttroot_n;
   static const char* mqtttopic_n;
+  static const char* updateInterval_n;
+  static const char* updateServer_n;
 
   void dump();
   bool writeFile();

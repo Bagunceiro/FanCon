@@ -2,9 +2,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <PubSubClient.h>
-#include <ArduinoOTA.h>
+#include <ESP8266httpUpdate.h>
+#include <WiFiSerial.h>
 
-const char *version = "FanCon 2.0.0";
+const char *version = "FanCon 3.0.0";
 const char *compDate = __DATE__;
 const char *compTime = __TIME__;
 
@@ -18,8 +19,6 @@ const char *compTime = __TIME__;
 #include "lamp.h"
 #include "fan.h"
 
-
-
 WiFiClient wifiClient;
 
 PubSubClient mqttClient(wifiClient);
@@ -27,28 +26,6 @@ PubSubClient mqttClient(wifiClient);
 Lamp lamp("light");
 Fan fan("fan");
 extern Configurator configurator;
-
-bool OTAinit = false;
-
-void initOTA()
-{
-  ArduinoOTA.setHostname(persistant.controllername.c_str());
-  ArduinoOTA.onStart([]() { // Enter safe state for the upgrade
-    lamp.sw(0);
-    fan.setSpeed(0);
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-  });
-  ArduinoOTA.onEnd([]() { // Sgnal completion of upgrade? How about flash the lights?
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    (void)error;
-    ESP.restart();
-  });
-  /* setup the OTA server */
-  ArduinoOTA.begin();
-  OTAinit = true;
-}
 
 int wifiattemptcount = 0;
 
@@ -71,6 +48,13 @@ void initWiFi()
     MDNS.begin(persistant.controllername);
     MDNS.addService("http", "tcp", 80);
   }
+}
+
+void update_started()
+{
+  Serial.println("HTTP update process started");
+  fan.setSpeed(0);
+  lamp.sw(0);
 }
 
 os_timer_t myTimer;
@@ -107,20 +91,48 @@ void setup()
   os_timer_setfn(&myTimer, timedLoop, NULL);
   os_timer_arm(&myTimer, 10, true);
 
+  ESPhttpUpdate.onStart(update_started);
   initWebServer();
 }
 
 bool wifiConnected = false;
 bool ntpstarted = false;
 
+void checkForUpdates()
+{
+  static unsigned long lastChecked = 0;
+  unsigned long now = millis();
+
+  if ((persistant.updateServer.length() > 0) && ((lastChecked == 0) || ((now - lastChecked) > (unsigned long)persistant.updateInterval.toInt())))
+  {
+    Serial.println("Checking for updates");
+    lastChecked = now;
+    t_httpUpdate_return ret = ESPhttpUpdate.update(wifiClient, persistant.updateServer);
+    switch (ret)
+    {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("Update failure, Error(%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      break;
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("No update available");
+      break;
+    case HTTP_UPDATE_OK:
+      Serial.println("Update OK");
+      break;
+    }
+  }
+}
+
 void loop()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
+    checkForUpdates();
     if (!wifiConnected)
     {
       Serial.println("WiFi connected");
       wifiConnected = true;
+      WSerial.begin("FanCon");
     }
     wifiattemptcount = 0;
     if (mqttClient.connected())
@@ -132,10 +144,6 @@ void loop()
       initMQTT();
     }
 
-    if (OTAinit == false)
-    {
-      initOTA();
-    }
     if (!ntpstarted)
     {
       timeClient.begin();
@@ -152,22 +160,10 @@ void loop()
       Serial.println("WiFi connection lost");
       wifiConnected = false;
     }
-    OTAinit = false;
     initWiFi();
   }
 
-  ArduinoOTA.handle();
   server.handleClient();
   configurator.poll();
-
-  /*
-  static unsigned long timecheck = 0;
-  unsigned long now = millis();
-
-  if (ntpstarted && ((now - timecheck) > 2000))
-  {
-    Serial.println(timeClient.getFormattedTime());
-    timecheck = now;
-  }
-  */
+  WSerial.loop();
 }

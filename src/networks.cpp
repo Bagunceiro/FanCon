@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include "configurator.h"
 #include "networks.h"
+#include "WiFiSerial.h"
 
 networkList configuredNets;
 networkList scannedNets;
@@ -13,20 +14,20 @@ extern Configurator configurator;
 
 networkList &scanNetworks()
 {
-    Serial.println("scan start");
+    WSerial.println("scan start");
     scannedNets.clear();
 
     // WiFi.scanNetworks will return the number of networks found
     int n = WiFi.scanNetworks();
-    Serial.println("scan done");
+    WSerial.println("scan done");
     if (n == 0)
     {
-        Serial.println("no networks found");
+        WSerial.println("no networks found");
     }
     else
     {
-        Serial.print(n);
-        Serial.println(" networks found");
+        WSerial.print(n);
+        WSerial.println(" networks found");
         scannedNets.clear();
         for (int i = 0; i < n; ++i)
         {
@@ -36,17 +37,17 @@ networkList &scanNetworks()
             network.rssi = WiFi.RSSI(i);
             scannedNets.push_back(network);
 
-            Serial.print(i + 1);
-            Serial.print(": ");
-            Serial.print(WiFi.SSID(i));
-            Serial.print(" (");
-            Serial.print(WiFi.RSSI(i));
-            Serial.print(")");
-            Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
+            WSerial.print(i + 1);
+            WSerial.print(": ");
+            WSerial.print(WiFi.SSID(i));
+            WSerial.print(" (");
+            WSerial.print(WiFi.RSSI(i));
+            WSerial.print(")");
+            WSerial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
             // delay(10);
         }
     }
-    Serial.println("");
+    WSerial.println("");
     return scannedNets;
 }
 
