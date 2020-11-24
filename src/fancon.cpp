@@ -5,7 +5,7 @@
 #include <ESP8266httpUpdate.h>
 #include <WiFiSerial.h>
 
-const char *version = "FanCon 3.0.0";
+const char *version = "FanCon 3.0.1";
 const char *compDate = __DATE__;
 const char *compTime = __TIME__;
 
