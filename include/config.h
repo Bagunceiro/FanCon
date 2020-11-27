@@ -48,6 +48,7 @@ struct configBlock
   String mqtttopic;
   String updateInterval;
   String updateServer;
+  String updateTime;
 
   static const char* controllername_n;
   static const char* mqtthost_n;
@@ -58,6 +59,7 @@ struct configBlock
   static const char* mqtttopic_n;
   static const char* updateInterval_n;
   static const char* updateServer_n;
+  static const char* updateTime_n;
 
   void dump();
   bool writeFile();
@@ -68,6 +70,7 @@ struct configBlock
 
 extern configBlock persistant;
 
+void startup();
 String upTime();
 void report();
 

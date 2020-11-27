@@ -94,6 +94,8 @@ void handleRoot()
 {
   const String title("Controller");
   const String head3("");
+  time_t now = timeClient.getEpochTime();
+  time_t lastUpdate = persistant.updateTime.toInt();
 
   String body2(R"=====(
 <button onclick=goreset()>Reset</button>
@@ -101,8 +103,10 @@ void handleRoot()
 <div class=content>
 <BR><B>Controller: )=====" + persistant.controllername + R"=====(</B>
 <TABLE>
+<TR><TD>Time now</TD><TD>)=====" + ctime(&now) + R"=====(</TD></TR>
 <TR><TD>Version</TD><TD>)=====" + version + " (" + compTime + " " + compDate + R"=====()</TD></TR>
 <TR><TD>MAC Address</TD><TD>)=====" + WiFi.macAddress() + R"=====(</TD></TR>
+<TR><TD>Last update</TD><TD>)=====" + (lastUpdate != 0 ? ctime(&lastUpdate) : "N/A") + R"=====(</TD></TR>
 <TR><TD>Uptime</TD><TD>)=====" + upTime() + R"=====(</TD></TR>
 <TR><TD>WiFi SSID</TD><TD>)=====" + WiFi.SSID() + R"=====(</TD></TR>
 </TABLE><BR>

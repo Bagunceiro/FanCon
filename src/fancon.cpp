@@ -4,8 +4,9 @@
 #include <PubSubClient.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiSerial.h>
+#include <time.h>
 
-const char *version = "FanCon 3.0.1";
+const char *version = "FanCon 3.0.2";
 const char *compDate = __DATE__;
 const char *compTime = __TIME__;
 
@@ -19,9 +20,10 @@ const char *compTime = __TIME__;
 #include "lamp.h"
 #include "fan.h"
 
-WiFiClient wifiClient;
+WiFiClient mqttWifiClient;
+WiFiClient updWifiClient;
 
-PubSubClient mqttClient(wifiClient);
+PubSubClient mqttClient(mqttWifiClient);
 
 Lamp lamp("light");
 Fan fan("fan");
@@ -52,9 +54,20 @@ void initWiFi()
 
 void update_started()
 {
-  Serial.println("HTTP update process started");
+  WSerial.println("HTTP update process started");
   fan.setSpeed(0);
   lamp.sw(0);
+  for (int i = 0; i < 3; i++) delay(lamp.blip(500));
+}
+
+void update_completed()
+{
+  time_t now = timeClient.getEpochTime();
+  WSerial.printf("HTTP update process complete at %s\n", ctime(&now));
+
+  persistant.updateTime = String(now);
+  persistant.writeFile();
+  for (int i = 0; i < 6; i++) delay(lamp.blip(500));
 }
 
 os_timer_t myTimer;
@@ -71,6 +84,8 @@ void setup()
   Serial.begin(9600);
   Serial.println("");
   Serial.println("Fancon Starting");
+
+  startup();
 
   if (persistant.readFile() == false)
   {
@@ -92,6 +107,7 @@ void setup()
   os_timer_arm(&myTimer, 10, true);
 
   ESPhttpUpdate.onStart(update_started);
+  ESPhttpUpdate.onEnd(update_completed);
   initWebServer();
 }
 
@@ -100,25 +116,33 @@ bool ntpstarted = false;
 
 void checkForUpdates()
 {
-  static unsigned long lastChecked = 0;
-  unsigned long now = millis();
+  static time_t lastUpdCheck = 0;
+  time_t now = timeClient.getEpochTime();
 
-  if ((persistant.updateServer.length() > 0) && ((lastChecked == 0) || ((now - lastChecked) > (unsigned long)persistant.updateInterval.toInt())))
+  if (persistant.updateServer.length() > 0)
   {
-    Serial.println("Checking for updates");
-    lastChecked = now;
-    t_httpUpdate_return ret = ESPhttpUpdate.update(wifiClient, persistant.updateServer);
-    switch (ret)
+    unsigned int sinceLastCheck = (now - lastUpdCheck);
+    unsigned int updateInterval = persistant.updateInterval.toInt() * 60;
+
+    if ((lastUpdCheck == 0) || (sinceLastCheck > updateInterval))
     {
-    case HTTP_UPDATE_FAILED:
-      Serial.printf("Update failure, Error(%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-      break;
-    case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("No update available");
-      break;
-    case HTTP_UPDATE_OK:
-      Serial.println("Update OK");
-      break;
+      WSerial.println("Checking for updates");
+      lastUpdCheck = now;
+
+      t_httpUpdate_return ret = ESPhttpUpdate.update(updWifiClient, persistant.updateServer);
+
+      switch (ret)
+      {
+      case HTTP_UPDATE_FAILED:
+        WSerial.printf("Update failure, Error(%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        break;
+      case HTTP_UPDATE_NO_UPDATES:
+        WSerial.println("No update available");
+        break;
+      case HTTP_UPDATE_OK:
+        WSerial.println("Update OK");
+        break;
+      }
     }
   }
 }
@@ -127,12 +151,13 @@ void loop()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
-    checkForUpdates();
+
     if (!wifiConnected)
     {
-      Serial.println("WiFi connected");
+
       wifiConnected = true;
       WSerial.begin("FanCon");
+      WSerial.println("WiFi connected");
     }
     wifiattemptcount = 0;
     if (mqttClient.connected())
@@ -147,11 +172,21 @@ void loop()
     if (!ntpstarted)
     {
       timeClient.begin();
+      timeClient.setUpdateInterval(3600000);
       ntpstarted = true;
       timeClient.update();
       timeClient.setTimeOffset(TZ * 60 * 60);
     }
+    else
+    {
+      if (!timeClient.update())
+      {
+        WSerial.println("NTP failure");
+      }
+    }
+
     MDNS.update();
+    checkForUpdates();
   }
   else
   {

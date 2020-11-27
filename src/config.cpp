@@ -20,6 +20,7 @@ const char *configBlock::mqttroot_n       = "mqttroot";
 const char *configBlock::mqtttopic_n      = "mqtttopic";
 const char *configBlock::updateInterval_n = "updateInterval";
 const char *configBlock::updateServer_n   = "updateServer";
+const char *configBlock::updateTime_n     = "updateTime";
 
 // const char* SSID = "asgard_2g";
 //const char* SSID = "myth";
@@ -39,33 +40,36 @@ const int IR_DETECTOR_PIN = 5;
 const unsigned int MQTT_CONNECT_ATTEMPT_PAUSE = 30000; // Delay between attempts to reconnect MQTT (ms)
 const unsigned int WIFI_CONNECT_ATTEMPT_PAUSE = 15000;
 
-#define MAGIC 0xc0ffee
-
 configBlock persistant;
+time_t startTime = 0;
+
+void startup()
+{
+  startTime = time(0);
+}
 
 String upTime()
 {
-  time_t now = millis();
-  int days = now / (1000 * 60 * 60 * 24);
-  int hours = (now % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
-  int mins = (now % (1000 * 60 * 60)) / (1000 * 60);
-  int secs = (now % (1000 * 60)) / 1000;
-  int millisecs = now % 1000;
-  char ms[4];
-  sprintf(ms, "%03d", millisecs);
-  return String(days) + " days " + String(hours) + ":" + String(mins) + ":" + String(secs) + "." + String(ms);
+  time_t now = time(0) - startTime;
+  int days = now / (60 * 60 * 24);
+  int hours = (now % (60 * 60 * 24)) / (60 * 60);
+  int mins = (now % (60 * 60)) / 60;
+  int secs = now % 60;
+  char buffer[20];
+  sprintf(buffer, "%d days, %02d:%02d:%02d", days, hours, mins, secs);
+  return buffer;
 }
 
 void report()
 {
-  Serial.print("Report for ");
-  Serial.println(persistant.controllername);
-  Serial.print("MAC Address: ");
-  Serial.println(WiFi.macAddress());
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.print("Up time: ");
-  Serial.println(upTime());
+  WSerial.print("Report for ");
+  WSerial.println(persistant.controllername);
+  WSerial.print("MAC Address: ");
+  WSerial.println(WiFi.macAddress());
+  WSerial.print("IP address: ");
+  WSerial.println(WiFi.localIP());
+  WSerial.print("Up time: ");
+  WSerial.println(upTime());
 }
 
 void configBlock::dump()
@@ -85,13 +89,14 @@ void configBlock::dump()
   WSerial.println(mqtttopic);
   WSerial.printf(format, updateInterval_n, updateInterval.c_str());
   WSerial.printf(format, updateServer_n, updateServer.c_str());
+  WSerial.printf(format, updateTime_n, updateTime.c_str());
 }
 
 bool configBlock::writeFile()
 {
   StaticJsonDocument<512> doc;
 
-  Serial.println("writeFile");
+  // Serial.println("writeFile");
 
   LittleFS.begin();
 
@@ -99,12 +104,10 @@ bool configBlock::writeFile()
   if (!configFile)
   {
     perror("");
-    Serial.println("Config file open for write failed");
+    WSerial.println("Config file open for write failed");
   }
   else
   {
-    Serial.println("Building doc");
-
     doc[controllername_n] = controllername;
     doc[mqtthost_n]       = mqtthost;
     doc[mqttport_n]       = mqttport;
@@ -114,12 +117,11 @@ bool configBlock::writeFile()
     doc[mqtttopic_n]      = mqtttopic;
     doc[updateInterval_n] = updateInterval;
     doc[updateServer_n]   = updateServer;
-    Serial.println("writing file");
+    doc[updateTime_n]     = updateTime;
     serializeJson(doc, configFile);
   }
   configFile.close();
   LittleFS.end();
-  Serial.println("done");
   return true;
 }
 
@@ -132,18 +134,17 @@ bool configBlock::readFile()
   File configFile = LittleFS.open("/config.json", "r");
   if (!configFile)
   {
-    Serial.println("Config file open for read failed");
+    WSerial.println("Config file open for read failed");
   }
   DeserializationError error = deserializeJson(doc, configFile);
   if (error)
   {
-    Serial.println(F("Failed to read file; using default configuration"));
+    WSerial.println(F("Failed to read file; using default configuration"));
   }
   else
   {
     result = true;
   }
-  // Serial.println("Read Config -");
 
   controllername = doc[controllername_n] | "FanCon";
   mqtthost       = doc[mqtthost_n] | "";
@@ -152,8 +153,9 @@ bool configBlock::readFile()
   mqttpwd        = doc[mqttpwd_n] | "";
   mqttroot       = doc[mqttroot_n] | "";
   mqtttopic      = doc[mqtttopic_n] | "";
-  updateInterval = doc[updateInterval_n] | "36000000";
+  updateInterval = doc[updateInterval_n] | "15";
   updateServer   = doc[updateServer_n] | "";
+  updateTime     = doc[updateTime_n] | "0";
 
   // Close the file (Curiously, File's destructor doesn't close the file)
 
