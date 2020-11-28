@@ -14,12 +14,12 @@ extern Configurator configurator;
 
 networkList &scanNetworks()
 {
-    WSerial.println("scan start");
+    // WSerial.println("scan start");
     scannedNets.clear();
 
     // WiFi.scanNetworks will return the number of networks found
     int n = WiFi.scanNetworks();
-    WSerial.println("scan done");
+    // WSerial.println("scan done");
     if (n == 0)
     {
         WSerial.println("no networks found");
