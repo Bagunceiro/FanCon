@@ -16,6 +16,7 @@ class Lamp: public MqttControlled, IRControlled
     void pollSwitch();
     char* getStatus(char* buff);
     const int blip(const int t = 500);
+    void blip(const int number, const int length);
     void mqttaction(String topic, String msg);
     virtual void doSubscriptions(PubSubClient& mqttclient);
     virtual void irmsgRecd(uint32_t code);

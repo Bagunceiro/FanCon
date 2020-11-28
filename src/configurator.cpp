@@ -79,10 +79,7 @@ void Configurator::start()
 
         Serial.printf("IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
-        for (int i = 0; i < 5; i++)
-        {
-            delay(lamp.blip(1000));
-        }
+        lamp.blip(10,250);
         startedAt = millis();
         running = true;
     }

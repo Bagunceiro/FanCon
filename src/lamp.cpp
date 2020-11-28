@@ -54,6 +54,15 @@ const int Lamp::blip(const int t)
   return (t);
 }
 
+void Lamp::blip(const int number, const int length)
+{
+    for (int i = number; i > 0; i--)
+    {
+      blip(length);
+      if (i > 1) delay(length);
+    }
+}
+
 void Lamp::init(int inp, int out)
 {
   spin = inp;

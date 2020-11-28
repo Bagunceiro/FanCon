@@ -57,7 +57,7 @@ void update_started()
   WSerial.println("HTTP update process started");
   fan.setSpeed(0);
   lamp.sw(0);
-  for (int i = 0; i < 3; i++) delay(lamp.blip(500));
+  lamp.blip(3,500);
 }
 
 void update_completed()
@@ -67,7 +67,7 @@ void update_completed()
 
   persistant.updateTime = String(now);
   persistant.writeFile();
-  for (int i = 0; i < 6; i++) delay(lamp.blip(500));
+  lamp.blip(5,500);
 }
 
 os_timer_t myTimer;
@@ -84,6 +84,7 @@ void setup()
   Serial.begin(9600);
   Serial.println("");
   Serial.println("Fancon Starting");
+
 
   startup();
 
