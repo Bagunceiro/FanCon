@@ -101,14 +101,21 @@ void handleRoot()
 <button onclick=goreset()>Reset</button>
 </div>
 <div class=content>
-<BR><B>Controller: )=====" + persistant.controllername + R"=====(</B>
+<BR><B>Controller: )=====" +
+               persistant.controllername + R"=====(</B>
 <TABLE>
-<TR><TD>Time now</TD><TD>)=====" + ctime(&now) + R"=====(</TD></TR>
-<TR><TD>Version</TD><TD>)=====" + version + " (" + compTime + " " + compDate + R"=====()</TD></TR>
-<TR><TD>MAC Address</TD><TD>)=====" + WiFi.macAddress() + R"=====(</TD></TR>
-<TR><TD>Last update</TD><TD>)=====" + (lastUpdate != 0 ? ctime(&lastUpdate) : "N/A") + R"=====(</TD></TR>
-<TR><TD>Uptime</TD><TD>)=====" + upTime() + R"=====(</TD></TR>
-<TR><TD>WiFi SSID</TD><TD>)=====" + WiFi.SSID() + R"=====(</TD></TR>
+<TR><TD>Time now</TD><TD>)=====" +
+               ctime(&now) + R"=====(</TD></TR>
+<TR><TD>Version</TD><TD>)=====" +
+               version + " (" + compTime + " " + compDate + R"=====()</TD></TR>
+<TR><TD>MAC Address</TD><TD>)=====" +
+               WiFi.macAddress() + R"=====(</TD></TR>
+<TR><TD>Last update</TD><TD>)=====" +
+               (lastUpdate != 0 ? ctime(&lastUpdate) : "N/A") + R"=====(</TD></TR>
+<TR><TD>Uptime</TD><TD>)=====" +
+               upTime() + R"=====(</TD></TR>
+<TR><TD>WiFi SSID</TD><TD>)=====" +
+               WiFi.SSID() + R"=====(</TD></TR>
 </TABLE><BR>
 </DIV>
 </BODY>
@@ -124,7 +131,8 @@ void resetMessage()
   String body2(R"=====(
   <div class=content>
   <BODY>
-  <br><B>Controller )=====" + persistant.controllername + R"=====(</B><br><br>
+  <br><B>Controller )=====" +
+               persistant.controllername + R"=====(</B><br><br>
   Resetting, please wait
   </div>
   </BODY>
@@ -179,7 +187,6 @@ void handleGenUpdate()
       {
         persistant.updateInterval = server.arg(i);
       }
-
     }
     persistant.dump();
     persistant.writeFile();
@@ -247,11 +254,11 @@ String &listNetworks(String &body, networkList &networks, bool selected)
 <tr>
 <td>
 <input type=checkbox)=====") +
-            String(selected ? " checked" : "") + String(" id=") + String(selected ? "cf" : "ds") + String(i)
-             + String(" name=conf") + String(R"=====(></input>
+            String(selected ? " checked" : "") + String(" id=") + String(selected ? "cf" : "ds") + String(i) + String(" name=conf") + String(R"=====(></input>
 <label for=)=====") +
             String(selected ? "cf" : "ds") + i + String(R"=====(>&nbsp;</label>
-<input type=hidden name=ssid value=")=====") + networks[i].ssid + String(R"=====("/>
+<input type=hidden name=ssid value=")=====") +
+            networks[i].ssid + String(R"=====("/>
 </td>
 <td>)=====") +
             String(networks[i].openNet ? "🔓" : "🔒") + (selected ? (String(" <a href=\"") + pageWiFiNet + "?ssid=" + networks[i].ssid + "\">") : "") + networks[i].ssid + String(selected ? "</a>" : "") + String(R"=====(
@@ -285,11 +292,21 @@ void handleNetConfig()
         Serial.println(value);
         addNetwork(newlist, value);
       }
-
+Serial.println(argName.c_str());
       if (argName == "conf")
         usenext = true;
       else
+      {
         usenext = false;
+        if (argName == "newnet")
+        {
+          Serial.printf("newnet, value = %s\n", value.c_str());
+          if (value.length() != 0)
+          {
+            addNetwork(newlist, value);
+          }
+        }
+      }
     }
     networkConfWrite(newlist);
   }
@@ -309,6 +326,7 @@ void handleNetConfig()
 
   listNetworks(body2, cnetworks, true);
   body2 += R"=====(
+<TR><TD>+</td><td><input name=newnet /></td></tr>
 </TABLE>
 <TABLE>
 <TR><TH colspan=2>Discovered Networks</TH></TR>
@@ -356,9 +374,10 @@ void handleNewNet()
   String body2(R"====(
 </div>
 <div class=content>
-<br><B>WiFi Network Edit: )====" + persistant.controllername + R"====(</B><br><br>
-)===="
-+ net.ssid + R"====( Updated
+<br><B>WiFi Network Edit: )====" +
+               persistant.controllername + R"====(</B><br><br>
+)====" + net.ssid +
+               R"====( Updated
 </div>
 </BODY>
 )====");
