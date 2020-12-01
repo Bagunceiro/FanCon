@@ -13,9 +13,20 @@ void ConfBlk::dump()
     }
 }
 
-bool ConfBlk::writeFile()
+bool ConfBlk::writeFile(Stream &s)
 {
     StaticJsonDocument<512> doc;
+    for (auto iterator : *this)
+    {
+        doc[iterator.first] = iterator.second;
+    }
+    serializeJson(doc, s);
+    return true;
+}
+
+bool ConfBlk::writeFile()
+{
+    bool result = true;
 
     LittleFS.begin();
 
@@ -24,50 +35,56 @@ bool ConfBlk::writeFile()
     {
         perror("");
         WSerial.println("Config file open for write failed");
+        result = false;
     }
     else
     {
-        for (auto iterator : *this)
-        {
-            doc[iterator.first] = iterator.second;
-        }
-        serializeJson(doc, configFile);
+        writeFile(configFile);
     }
     configFile.close();
     LittleFS.end();
-    return true;
+    return result;
+}
+
+bool ConfBlk::readFile(Stream &s)
+{
+    bool result = false;
+    StaticJsonDocument<512> doc;
+
+    DeserializationError error = deserializeJson(doc, s);
+    if (error)
+    {
+        WSerial.println(F("Failed to read file; using default configuration"));
+        result = false;
+    }
+    else
+    {
+        JsonObject root = doc.as<JsonObject>();
+        for (JsonPair kv : root)
+        {
+            (*this)[kv.key().c_str()] = (const char*)kv.value();
+        }
+        result = true;
+    }
+    return result;
 }
 
 bool ConfBlk::readFile()
 {
-    StaticJsonDocument<512> doc;
     bool result = false;
 
     LittleFS.begin();
+
     File configFile = LittleFS.open(conffilename, "r");
     if (!configFile)
     {
         WSerial.println("Config file open for read failed");
     }
-    DeserializationError error = deserializeJson(doc, configFile);
-    if (error)
-    {
-        WSerial.println(F("Failed to read file; using default configuration"));
-    }
     else
     {
-        result = true;
+        result = readFile(configFile);
+        configFile.close();
     }
-
-    JsonObject root = doc.as<JsonObject>();
-    for (JsonPair kv : root)
-    {
-        (*this)[kv.key()] = kv.value();
-    }
-
-    // Close the file (Curiously, File's destructor doesn't close the file)
-
-    configFile.close();
 
     LittleFS.end();
     return result;
