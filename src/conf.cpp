@@ -1,5 +1,5 @@
 #include "conf.h"
-
+#include <WiFiSerial.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
