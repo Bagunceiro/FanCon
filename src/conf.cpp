@@ -5,15 +5,15 @@
 
 const String conffilename("/config.json");
 
-void ConfBlk::dump()
+void ConfBlk::dump(Stream& s)
 {
     for (auto iterator : *this)
     {
-        WSerial.printf("%s  = %s\n", iterator.first.c_str(), iterator.second.c_str());
+        s.printf("%s  = %s\n", iterator.first.c_str(), iterator.second.c_str());
     }
 }
 
-bool ConfBlk::writeFile(Stream &s)
+bool ConfBlk::writeStream(Stream &s)
 {
     StaticJsonDocument<512> doc;
     for (auto iterator : *this)
@@ -39,14 +39,14 @@ bool ConfBlk::writeFile()
     }
     else
     {
-        writeFile(configFile);
+        writeStream(configFile);
     }
     configFile.close();
     LittleFS.end();
     return result;
 }
 
-bool ConfBlk::readFile(Stream &s)
+bool ConfBlk::readStream(Stream &s)
 {
     bool result = false;
     StaticJsonDocument<512> doc;
@@ -82,8 +82,9 @@ bool ConfBlk::readFile()
     }
     else
     {
-        result = readFile(configFile);
+        result = readStream(configFile);
         configFile.close();
+        result = true;
     }
 
     LittleFS.end();

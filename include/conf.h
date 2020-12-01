@@ -5,10 +5,10 @@
 class ConfBlk: public std::map<String, String>
 {
 public:
-    void dump();
-    bool writeFile(Stream& s);
+    void dump(Stream& s);
+    bool writeStream(Stream& s);
     bool writeFile();
-    bool readFile(Stream& s);
+    bool readStream(Stream& s);
     bool readFile();
 };
 
