@@ -57,7 +57,7 @@ void update_started()
   WSerial.println("HTTP update process started");
   fan.setSpeed(0);
   lamp.sw(0);
-  lamp.blip(3,500);
+  // lamp.blip(3,500);
 }
 
 void update_completed()
@@ -67,7 +67,7 @@ void update_completed()
 
   persistant.updateTime = String(now);
   persistant.writeFile();
-  lamp.blip(5,500);
+  // lamp.blip(5,500);
 }
 
 os_timer_t myTimer;
@@ -109,10 +109,9 @@ void setup()
 
   ESPhttpUpdate.onStart(update_started);
   ESPhttpUpdate.onEnd(update_completed);
-  initWebServer();
+  webServer.init();
 }
 
-bool wifiConnected = false;
 bool ntpstarted = false;
 
 void checkForUpdates()
@@ -150,25 +149,20 @@ void checkForUpdates()
 
 void loop()
 {
+  static bool wifiWasConnected = false;
+
   if (WiFi.status() == WL_CONNECTED)
   {
-
-    if (!wifiConnected)
+    if (!wifiWasConnected)
     {
-
-      wifiConnected = true;
+      wifiWasConnected = true;
       WSerial.begin("FanCon");
       WSerial.println("WiFi connected");
     }
     wifiattemptcount = 0;
-    if (mqttClient.connected())
-    {
-      mqttClient.loop();
-    }
-    else
-    {
-      initMQTT();
-    }
+
+    if (mqttClient.connected()) mqttClient.loop();
+    else initMQTT();
 
     if (!ntpstarted)
     {
@@ -178,28 +172,22 @@ void loop()
       timeClient.update();
       timeClient.setTimeOffset(TZ * 60 * 60);
     }
-    else
-    {
-      if (!timeClient.update())
-      {
-        WSerial.println("NTP failure");
-      }
-    }
+    else if (!timeClient.update()) WSerial.println("NTP failure");
 
     MDNS.update();
+    webServer.handleClient();
+    WSerial.loop();
     checkForUpdates();
   }
   else
   {
-    if (wifiConnected)
+    if (wifiWasConnected)
     {
       Serial.println("WiFi connection lost");
-      wifiConnected = false;
+      wifiWasConnected = false;
     }
     initWiFi();
   }
 
-  server.handleClient();
   configurator.poll();
-  WSerial.loop();
 }

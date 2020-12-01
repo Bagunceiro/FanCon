@@ -4,7 +4,9 @@
 #include "networks.h"
 #include "WiFiSerial.h"
 
-ESP8266WebServer server(80);
+// ESP8266WebServer webServer(80);
+FanConWebServer webServer(80);
+
 
 const String pageRoot = "/";
 const String pageGen = "/config.gen";
@@ -78,16 +80,16 @@ void sendPage(const String &s1,
 {
   int contentLength = s1.length() + s2.length() + s3.length() + s4.length() + s5.length() + s6.length() + s7.length() + s8.length() + tail.length();
 
-  server.setContentLength(contentLength);
-  server.send(200, "text/html", s1);
-  server.sendContent(s2);
-  server.sendContent(s3);
-  server.sendContent(s4);
-  server.sendContent(s5);
-  server.sendContent(s6);
-  server.sendContent(s7);
-  server.sendContent(s8);
-  server.sendContent(tail);
+  webServer.setContentLength(contentLength);
+  webServer.send(200, "text/html", s1);
+  webServer.sendContent(s2);
+  webServer.sendContent(s3);
+  webServer.sendContent(s4);
+  webServer.sendContent(s5);
+  webServer.sendContent(s6);
+  webServer.sendContent(s7);
+  webServer.sendContent(s8);
+  webServer.sendContent(tail);
 }
 
 void handleRoot()
@@ -145,47 +147,47 @@ void resetMessage()
 
 void handleGenUpdate()
 {
-  if (server.method() == HTTP_POST)
+  if (webServer.method() == HTTP_POST)
   {
 
-    for (uint8_t i = 0; i < server.args(); i++)
+    for (uint8_t i = 0; i < webServer.args(); i++)
     {
-      const String argName = server.argName(i);
+      const String argName = webServer.argName(i);
       if (argName == persistant.controllername_n)
       {
-        persistant.controllername = server.arg(i);
+        persistant.controllername = webServer.arg(i);
       }
       else if (argName == persistant.mqtthost_n)
       {
-        persistant.mqtthost = server.arg(i);
+        persistant.mqtthost = webServer.arg(i);
       }
       else if (argName == persistant.mqttport_n)
       {
-        persistant.mqttport = server.arg(i);
+        persistant.mqttport = webServer.arg(i);
       }
       else if (argName == persistant.mqttuser_n)
       {
-        persistant.mqttuser = server.arg(i);
+        persistant.mqttuser = webServer.arg(i);
       }
       else if (argName == persistant.mqttpwd_n)
       {
-        persistant.mqttpwd = server.arg(i);
+        persistant.mqttpwd = webServer.arg(i);
       }
       else if (argName == persistant.mqttroot_n)
       {
-        persistant.mqttroot = server.arg(i);
+        persistant.mqttroot = webServer.arg(i);
       }
       else if (argName == persistant.mqtttopic_n)
       {
-        persistant.mqtttopic = server.arg(i);
+        persistant.mqtttopic = webServer.arg(i);
       }
       else if (argName == persistant.updateServer_n)
       {
-        persistant.updateServer = server.arg(i);
+        persistant.updateServer = webServer.arg(i);
       }
       else if (argName == persistant.updateInterval_n)
       {
-        persistant.updateInterval = server.arg(i);
+        persistant.updateInterval = webServer.arg(i);
       }
     }
     persistant.dump();
@@ -276,16 +278,16 @@ bool sortByRSSI(WiFiNetworkDef i, WiFiNetworkDef j)
 
 void handleNetConfig()
 {
-  if (server.method() == HTTP_POST)
+  if (webServer.method() == HTTP_POST)
   {
     Serial.println("Network Update");
     networkList newlist;
 
     bool usenext = false;
-    for (uint8_t i = 0; i < server.args(); i++)
+    for (uint8_t i = 0; i < webServer.args(); i++)
     {
-      const String argName = server.argName(i);
-      const String value = server.arg(i);
+      const String argName = webServer.argName(i);
+      const String value = webServer.arg(i);
 
       if (usenext && (argName == "ssid"))
       {
@@ -347,22 +349,22 @@ void handleNewNet()
   WiFiNetworkDef net("");
   net.openNet = true;
 
-  if (server.method() == HTTP_POST)
+  if (webServer.method() == HTTP_POST)
   {
 
-    for (uint8_t i = 0; i < server.args(); i++)
+    for (uint8_t i = 0; i < webServer.args(); i++)
     {
-      const String argName = server.argName(i);
-      Serial.printf("Arg %s, val %s\n", argName.c_str(), server.arg(i).c_str());
+      const String argName = webServer.argName(i);
+      Serial.printf("Arg %s, val %s\n", argName.c_str(), webServer.arg(i).c_str());
 
       if (argName == "ssid")
       {
-        Serial.printf("SSID is %s\n", server.arg(i).c_str());
-        net.ssid = server.arg(i);
+        Serial.printf("SSID is %s\n", webServer.arg(i).c_str());
+        net.ssid = webServer.arg(i);
       }
       else if (argName == "psk")
       {
-        net.psk = server.arg(i);
+        net.psk = webServer.arg(i);
         net.openNet = false;
       }
     }
@@ -388,11 +390,11 @@ void handleNewNet()
 void handleNetEdit()
 {
   String ssid;
-  for (int i = 0; i < server.args(); i++)
+  for (int i = 0; i < webServer.args(); i++)
   {
-    if (server.argName(i) == "ssid")
+    if (webServer.argName(i) == "ssid")
     {
-      ssid = server.arg(i);
+      ssid = webServer.arg(i);
       break;
     }
   }
@@ -426,22 +428,16 @@ void handleNetEdit()
   sendPage(head1, title, head2, style, head3, headEnd, body1, body2);
 }
 
-void initWebServer()
+void FanConWebServer::init()
 {
-  server.on(pageRoot, handleRoot);
-  server.on(pageGen, handleGenConfig);
-  server.on(pageGenUpdate, handleGenUpdate);
-  server.on(pageWiFi, handleNetConfig);
-  server.on(pageWiFiNet, handleNetEdit);
-  server.on(pageWiFiNetAdd, handleNewNet);
-  server.on(pageReset, resetMessage);
+  webServer.on(pageRoot, handleRoot);
+  webServer.on(pageGen, handleGenConfig);
+  webServer.on(pageGenUpdate, handleGenUpdate);
+  webServer.on(pageWiFi, handleNetConfig);
+  webServer.on(pageWiFiNet, handleNetEdit);
+  webServer.on(pageWiFiNetAdd, handleNewNet);
+  webServer.on(pageReset, resetMessage);
 
   Serial.println("Web Server");
-  server.begin();
-}
-
-void restartWebServer()
-{
-  server.stop();
-  initWebServer();
+  webServer.begin();
 }
